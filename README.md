@@ -133,46 +133,6 @@ The app follows MVVM (Model-View-ViewModel) architecture:
 - Gift
 - Other
 
-## Development Roadmap
-
-### Phase 1: Core Functionality (MVP) ✅
-- [x] User authentication
-- [x] Add/Edit/Delete transactions
-- [x] Default categories
-- [x] Transaction list with filtering
-- [x] Basic UI with Material 3
-
-### Phase 2: Budget & Sync (In Progress)
-- [ ] Budget planning and alerts
-- [ ] Firebase Firestore sync
-- [ ] Cloud backup
-- [ ] Enhanced filtering and search
-- [ ] Recurring transactions
-- [ ] Improved analytics
-
-### Phase 3: Financial Tools
-- [ ] Debt tracker
-- [ ] Savings goals
-- [ ] Currency converter
-- [ ] Bill reminders
-- [ ] Export functionality
-- [ ] Receipt upload
-
-### Phase 4: Polish & Enhancement
-- [ ] Biometric lock
-- [ ] Database encryption
-- [ ] Advanced animations
-- [ ] Accessibility improvements
-- [ ] Performance optimization
-
-## Contributing
-
-This is an academic project for SCO 306 - Programming Languages (Project 2).
-
-## License
-
-This project is for academic purposes.
-
 ## Contact
 
 For questions or issues, please contact the development team.
