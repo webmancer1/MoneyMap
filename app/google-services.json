@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "869025911083",
+    "project_id": "moneymap-42c5f",
+    "storage_bucket": "moneymap-42c5f.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:869025911083:android:a2764323b957992345356e",
+        "android_client_info": {
+          "package_name": "com.example.moneymap"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "869025911083-qbngl8u3731s3rv6b274546s77b404bb.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.moneymap",
+            "certificate_hash": "84fb76844a6d6a5bf899ac6725d2ef74b4d783c0"
+          }
+        },
+        {
+          "client_id": "869025911083-dl0eoe8m04pnp0h12mpor28mtn5ucoul.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB4skr-i5kyYSz-sxv6RlCqxdWjWSw5cVI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "869025911083-dl0eoe8m04pnp0h12mpor28mtn5ucoul.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
