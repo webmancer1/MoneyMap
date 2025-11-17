@@ -38,6 +38,9 @@ android {
     }
     kotlinOptions {
         jvmTarget = "11"
+        freeCompilerArgs += listOf(
+            "-opt-in=androidx.compose.material3.ExperimentalMaterial3Api"
+        )
     }
     buildFeatures {
         compose = true
@@ -68,10 +71,6 @@ dependencies {
     // Room Database
     implementation(libs.androidx.room.runtime)
     implementation(libs.androidx.room.ktx)
-    implementation(libs.firebase.auth)
-    implementation(libs.androidx.credentials)
-    implementation(libs.androidx.credentials.play.services.auth)
-    implementation(libs.googleid)
     kapt(libs.androidx.room.compiler)
     
     // Hilt Dependency Injection
@@ -83,7 +82,7 @@ dependencies {
     // Coroutines
     implementation(libs.kotlinx.coroutines.android)
     
-    // Firebase
+    // Firebase - BOM manages all Firebase dependency versions
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.auth.ktx)
     implementation(libs.firebase.firestore.ktx)

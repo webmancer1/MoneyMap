@@ -15,6 +15,7 @@ import com.example.moneymap.data.preferences.SettingsRepository
 import com.example.moneymap.navigation.NavRoutes
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
 @Composable
@@ -43,7 +44,7 @@ fun BiometricLifecycleObserver(
     DisposableEffect(shouldCheckBiometric) {
         if (shouldCheckBiometric) {
             CoroutineScope(Dispatchers.Main).launch {
-                val preferences = settingsRepository.settingsFlow.first { true }
+                val preferences = settingsRepository.settingsFlow.first()
                 val currentRoute = navController.currentBackStackEntry?.destination?.route
                 if (preferences.biometricLockEnabled && 
                     currentRoute != NavRoutes.BIOMETRIC_LOCK && 

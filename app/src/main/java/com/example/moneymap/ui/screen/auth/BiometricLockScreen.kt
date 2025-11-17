@@ -2,7 +2,7 @@ package com.example.moneymap.ui.screen.auth
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Fingerprint
+import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -55,7 +55,7 @@ fun BiometricLockScreen(
         verticalArrangement = Arrangement.Center
     ) {
         Icon(
-            imageVector = Icons.Default.Fingerprint,
+            imageVector = Icons.Default.Lock,
             contentDescription = "Biometric",
             modifier = Modifier.size(80.dp),
             tint = MaterialTheme.colorScheme.primary

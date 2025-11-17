@@ -179,7 +179,7 @@ private fun SpendingByCategoryChart(uiState: ReportsUiState) {
 
             Chart(
                 chart = columnChart(),
-                chartModel = modelProducer.getModel(),
+                model = modelProducer.getModel() ?: return,
                 startAxis = rememberStartAxis(),
                 bottomAxis = rememberBottomAxis(valueFormatter = { value, _ ->
                     labels.getOrNull(value.toInt()) ?: ""
@@ -220,7 +220,7 @@ private fun IncomeVsExpenseChart(uiState: ReportsUiState) {
 
             Chart(
                 chart = columnChart(),
-                chartModel = modelProducer.getModel(),
+                model = modelProducer.getModel() ?: return,
                 startAxis = rememberStartAxis(),
                 bottomAxis = rememberBottomAxis(valueFormatter = { value, _ ->
                     labels.getOrNull(value.toInt()) ?: ""

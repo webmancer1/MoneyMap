@@ -65,13 +65,13 @@ fun HomeScreen(
                 NavigationBarItem(
                     selected = false,
                     onClick = onNavigateToReports,
-                    icon = { Icon(Icons.Default.Assessment, contentDescription = "Reports") },
+                    icon = { Icon(Icons.Default.List, contentDescription = "Reports") },
                     label = { Text("Reports") }
                 )
                 NavigationBarItem(
                     selected = false,
                     onClick = onNavigateToBudgets,
-                    icon = { Icon(Icons.Default.AccountBalanceWallet, contentDescription = "Budgets") },
+                    icon = { Icon(Icons.Default.AccountCircle, contentDescription = "Budgets") },
                     label = { Text("Budgets") }
                 )
             }

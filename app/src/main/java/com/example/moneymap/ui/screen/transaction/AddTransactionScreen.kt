@@ -8,13 +8,15 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.CalendarToday
-import androidx.compose.material.icons.filled.CloudUpload
+import androidx.compose.material.icons.filled.DateRange
+import androidx.compose.material.icons.outlined.DateRange as DateRangeOutlined
 import androidx.compose.material.icons.filled.Done
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.Button
@@ -29,9 +31,8 @@ import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.SegmentedButton
-import androidx.compose.material3.SegmentedButtonDefaults
-import androidx.compose.material3.SegmentedButtonRow
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -182,21 +183,20 @@ fun AddTransactionScreen(
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.SemiBold
             )
-            SegmentedButtonRow {
-                SegmentedButton(
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                FilterChip(
                     selected = formState.type == TransactionType.EXPENSE,
                     onClick = { viewModel.updateTransactionType(TransactionType.EXPENSE) },
-                    shape = SegmentedButtonDefaults.itemShape(index = 0, count = 2)
-                ) {
-                    Text("Expense")
-                }
-                SegmentedButton(
+                    label = { Text("Expense") }
+                )
+                FilterChip(
                     selected = formState.type == TransactionType.INCOME,
                     onClick = { viewModel.updateTransactionType(TransactionType.INCOME) },
-                    shape = SegmentedButtonDefaults.itemShape(index = 1, count = 2)
-                ) {
-                    Text("Income")
-                }
+                    label = { Text("Income") }
+                )
             }
 
             Text(
@@ -251,7 +251,7 @@ fun AddTransactionScreen(
                     fontWeight = FontWeight.SemiBold
                 )
                 OutlinedButton(onClick = { showDatePicker = true }) {
-                    Icon(Icons.Default.CalendarToday, contentDescription = null)
+                    Icon(Icons.Default.DateRange, contentDescription = null)
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(viewModel.formatDate(formState.date))
                 }
@@ -367,7 +367,7 @@ fun AddTransactionScreen(
             Divider()
 
             OutlinedButton(onClick = { /* TODO: integrate receipt upload */ }) {
-                Icon(Icons.Default.CloudUpload, contentDescription = null)
+                Icon(Icons.Default.Add, contentDescription = null)
                 Spacer(modifier = Modifier.width(8.dp))
                 Text("Upload Receipt (Coming Soon)")
             }

@@ -3,6 +3,7 @@ package com.example.moneymap.ui.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.moneymap.data.model.Category
+import com.example.moneymap.data.model.CategoryType
 import com.example.moneymap.data.model.PaymentMethod
 import com.example.moneymap.data.model.RecurringPattern
 import com.example.moneymap.data.model.SyncStatus
@@ -277,6 +278,10 @@ class TransactionViewModel @Inject constructor(
     }
 
     fun getCategoriesForType(type: TransactionType, allCategories: List<Category>): List<Category> {
-        return allCategories.filter { it.type == type }
+        val categoryType = when (type) {
+            TransactionType.INCOME -> CategoryType.INCOME
+            TransactionType.EXPENSE -> CategoryType.EXPENSE
+        }
+        return allCategories.filter { it.type == categoryType }
     }
 }

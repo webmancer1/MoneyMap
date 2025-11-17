@@ -4,6 +4,7 @@ import androidx.activity.ComponentActivity
 import androidx.biometric.BiometricManager
 import androidx.biometric.BiometricPrompt
 import androidx.core.content.ContextCompat
+import androidx.fragment.app.FragmentActivity
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlin.coroutines.resume
 
@@ -23,8 +24,13 @@ class BiometricHelper(private val activity: ComponentActivity) {
         negativeButtonText: String = "Cancel"
     ): BiometricResult = suspendCancellableCoroutine { continuation ->
         val executor = ContextCompat.getMainExecutor(activity)
+        val fragmentActivity = activity as? FragmentActivity ?: run {
+            continuation.resume(BiometricResult.Error("Activity is not a FragmentActivity"))
+            return@suspendCancellableCoroutine
+        }
+        
         val biometricPrompt = BiometricPrompt(
-            activity,
+            fragmentActivity,
             executor,
             object : BiometricPrompt.AuthenticationCallback() {
                 override fun onAuthenticationError(errorCode: Int, errString: CharSequence) {
