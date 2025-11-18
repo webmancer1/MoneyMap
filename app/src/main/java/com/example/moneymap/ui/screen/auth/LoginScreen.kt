@@ -1,6 +1,7 @@
 package com.example.moneymap.ui.screen.auth
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.material.CircularProgressIndicator as LegacyCircularProgressIndicator
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -66,7 +67,7 @@ fun LoginScreen(
             enabled = !uiState.isLoading && email.isNotBlank() && password.isNotBlank()
         ) {
             if (uiState.isLoading) {
-                CircularProgressIndicator(modifier = Modifier.size(20.dp))
+                LegacyCircularProgressIndicator(modifier = Modifier.size(20.dp))
             } else {
                 Text("Sign In")
             }

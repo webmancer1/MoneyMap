@@ -1,8 +1,6 @@
 package com.example.moneymap.di
 
 import android.content.Context
-import androidx.hilt.work.HiltWorkerFactory
-import androidx.work.Configuration
 import androidx.work.WorkManager
 import dagger.Module
 import dagger.Provides
@@ -17,14 +15,7 @@ object WorkManagerModule {
     @Provides
     @Singleton
     fun provideWorkManager(
-        @ApplicationContext context: Context,
-        workerFactory: HiltWorkerFactory
-    ): WorkManager {
-        val config = Configuration.Builder()
-            .setWorkerFactory(workerFactory)
-            .build()
-        WorkManager.initialize(context, config)
-        return WorkManager.getInstance(context)
-    }
+        @ApplicationContext context: Context
+    ): WorkManager = WorkManager.getInstance(context)
 }
 
