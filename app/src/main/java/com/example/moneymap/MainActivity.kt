@@ -35,26 +35,35 @@ class MainActivity : ComponentActivity() {
         }
         
         setContent {
-            MoneyMapTheme {
+            val settingsViewModel: SettingsViewModel = hiltViewModel()
+            val settingsState by settingsViewModel.uiState.collectAsState()
+
+            MoneyMapTheme(
+                darkTheme = settingsState.preferences.darkTheme,
+                dynamicColor = settingsState.preferences.dynamicColor
+            ) {
+                val navController = rememberNavController()
+
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    val navController = rememberNavController()
-                    val settingsViewModel: SettingsViewModel = hiltViewModel()
-                    val settingsState by settingsViewModel.uiState.collectAsState()
-                    
                     // Check for biometric lock on app start
-                    LaunchedEffect(Unit) {
-                        if (firebaseAuth.currentUser != null && 
+                    LaunchedEffect(
+                        firebaseAuth.currentUser,
+                        settingsState.preferences.biometricLockEnabled,
+                        startDestination
+                    ) {
+                        if (firebaseAuth.currentUser != null &&
                             settingsState.preferences.biometricLockEnabled &&
-                            startDestination == NavRoutes.HOME) {
+                            startDestination == NavRoutes.HOME
+                        ) {
                             navController.navigate(NavRoutes.BIOMETRIC_LOCK) {
                                 popUpTo(NavRoutes.HOME) { inclusive = true }
                             }
                         }
                     }
-                    
+
                     MoneyMapNavigation(
                         navController = navController,
                         startDestination = startDestination
