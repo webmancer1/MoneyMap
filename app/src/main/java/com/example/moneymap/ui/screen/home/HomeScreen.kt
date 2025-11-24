@@ -118,7 +118,7 @@ fun HomeScreen(
                 ) {
                     Column(
                         modifier = Modifier.padding(16.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally
+                        horizontalAlignment = Alignment.Start
                     ) {
                         Text(
                             text = "Balance",
