@@ -113,5 +113,28 @@ class AuthViewModel @Inject constructor(
     fun clearError() {
         _uiState.value = _uiState.value.copy(errorMessage = null)
     }
+
+    fun signInWithGoogle(idToken: String) {
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null)
+            val result = authRepository.signInWithGoogle(idToken)
+            result.onSuccess { user ->
+                _uiState.value = _uiState.value.copy(
+                    isLoading = false,
+                    user = user,
+                    isLoggedIn = true,
+                    errorMessage = null
+                )
+                // Trigger sync after successful login
+                syncManager.triggerManualSync()
+            }.onFailure { exception ->
+                _uiState.value = _uiState.value.copy(
+                    isLoading = false,
+                    errorMessage = exception.message ?: "Google sign in failed",
+                    isLoggedIn = false
+                )
+            }
+        }
+    }
 }
 
