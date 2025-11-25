@@ -12,7 +12,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.moneymap.ui.viewmodel.HomeViewModel
@@ -47,58 +46,6 @@ fun HomeScreen(
         floatingActionButton = {
             FloatingActionButton(onClick = onNavigateToAddTransaction) {
                 Icon(Icons.Default.Add, contentDescription = "Add Transaction")
-            }
-        },
-        bottomBar = {
-            NavigationBar {
-                NavigationBarItem(
-                    selected = true,
-                    onClick = { },
-                    icon = { Icon(Icons.Default.Home, contentDescription = "Home") },
-                    label = {
-                        Text(
-                            text = "Home",
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
-                        )
-                    }
-                )
-                NavigationBarItem(
-                    selected = false,
-                    onClick = onNavigateToTransactions,
-                    icon = { Icon(Icons.Default.List, contentDescription = "Transactions") },
-                    label = {
-                        Text(
-                            text = "Transactions",
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
-                        )
-                    }
-                )
-                NavigationBarItem(
-                    selected = false,
-                    onClick = onNavigateToReports,
-                    icon = { Icon(Icons.Default.List, contentDescription = "Reports") },
-                    label = {
-                        Text(
-                            text = "Reports",
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
-                        )
-                    }
-                )
-                NavigationBarItem(
-                    selected = false,
-                    onClick = onNavigateToBudgets,
-                    icon = { Icon(Icons.Default.AccountCircle, contentDescription = "Budgets") },
-                    label = {
-                        Text(
-                            text = "Budgets",
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
-                        )
-                    }
-                )
             }
         }
     ) { paddingValues ->
