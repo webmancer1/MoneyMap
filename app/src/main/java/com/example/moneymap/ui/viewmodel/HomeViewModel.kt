@@ -38,7 +38,7 @@ class HomeViewModel @Inject constructor(
 
     init {
         initializeCategories()
-        loadMonthlySummary()
+        observeMonthlySummary()
         schedulePeriodicSync()
     }
 
@@ -54,38 +54,42 @@ class HomeViewModel @Inject constructor(
         }
     }
 
-    private fun loadMonthlySummary() {
-        viewModelScope.launch {
-            val calendar = Calendar.getInstance()
-            calendar.set(Calendar.DAY_OF_MONTH, 1)
-            calendar.set(Calendar.HOUR_OF_DAY, 0)
-            calendar.set(Calendar.MINUTE, 0)
-            calendar.set(Calendar.SECOND, 0)
-            val startDate = calendar.timeInMillis
+    private fun observeMonthlySummary() {
+        val (startDate, endDate) = currentMonthRange()
+        transactionRepository.getTransactionsByDateRange(startDate, endDate)
+            .onStart { _uiState.value = _uiState.value.copy(isLoading = true) }
+            .onEach { transactions ->
+                val income = transactions
+                    .filter { it.type == TransactionType.INCOME }
+                    .sumOf { it.amount }
+                val expenses = transactions
+                    .filter { it.type == TransactionType.EXPENSE }
+                    .sumOf { it.amount }
 
-            calendar.set(Calendar.DAY_OF_MONTH, calendar.getActualMaximum(Calendar.DAY_OF_MONTH))
-            calendar.set(Calendar.HOUR_OF_DAY, 23)
-            calendar.set(Calendar.MINUTE, 59)
-            calendar.set(Calendar.SECOND, 59)
-            val endDate = calendar.timeInMillis
+                _uiState.value = _uiState.value.copy(
+                    totalIncome = income,
+                    totalExpenses = expenses,
+                    balance = income - expenses,
+                    isLoading = false
+                )
+            }
+            .launchIn(viewModelScope)
+    }
 
-            val income = transactionRepository.getTotalAmountByTypeAndDateRange(
-                TransactionType.INCOME,
-                startDate,
-                endDate
-            )
-            val expenses = transactionRepository.getTotalAmountByTypeAndDateRange(
-                TransactionType.EXPENSE,
-                startDate,
-                endDate
-            )
+    private fun currentMonthRange(): Pair<Long, Long> {
+        val calendar = Calendar.getInstance()
+        calendar.set(Calendar.DAY_OF_MONTH, 1)
+        calendar.set(Calendar.HOUR_OF_DAY, 0)
+        calendar.set(Calendar.MINUTE, 0)
+        calendar.set(Calendar.SECOND, 0)
+        val startDate = calendar.timeInMillis
 
-            _uiState.value = _uiState.value.copy(
-                totalIncome = income,
-                totalExpenses = expenses,
-                balance = income - expenses
-            )
-        }
+        calendar.set(Calendar.DAY_OF_MONTH, calendar.getActualMaximum(Calendar.DAY_OF_MONTH))
+        calendar.set(Calendar.HOUR_OF_DAY, 23)
+        calendar.set(Calendar.MINUTE, 59)
+        calendar.set(Calendar.SECOND, 59)
+        val endDate = calendar.timeInMillis
+        return startDate to endDate
     }
 }
 
