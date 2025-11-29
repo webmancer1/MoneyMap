@@ -35,6 +35,11 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.moneymap.ui.viewmodel.ReportPeriod
 import com.example.moneymap.ui.viewmodel.ReportsUiState
 import com.example.moneymap.ui.viewmodel.ReportsViewModel
+import com.example.moneymap.ui.viewmodel.CategorySpending
+import com.example.moneymap.ui.viewmodel.PaymentMethodSpending
+import com.example.moneymap.ui.viewmodel.SpendingInsight
+import java.text.NumberFormat
+import java.util.Locale
 import com.patrykandpatrick.vico.compose.axis.horizontal.rememberBottomAxis
 import com.patrykandpatrick.vico.compose.axis.vertical.rememberStartAxis
 import com.patrykandpatrick.vico.compose.chart.Chart
@@ -94,7 +99,13 @@ private fun ReportsContent(
             totalExpense = uiState.totalExpense
         )
 
+        SpendingInsightsSection(uiState.spendingInsights)
+
         SpendingByCategoryChart(uiState)
+
+        TopCategoriesList(uiState.spendingByCategory)
+
+        PaymentMethodBreakdown(uiState.paymentMethodSpending)
 
         IncomeVsExpenseChart(uiState)
     }
@@ -166,7 +177,18 @@ private fun SpendingByCategoryChart(uiState: ReportsUiState) {
         )
 
         if (uiState.spendingByCategory.isEmpty()) {
-            Text("No expense data available for the selected period.")
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant
+                )
+            ) {
+                Text(
+                    text = "No expense data available for the selected period.",
+                    modifier = Modifier.padding(16.dp),
+                    style = MaterialTheme.typography.bodyMedium
+                )
+            }
         } else {
             val entries = remember(uiState.spendingByCategory) {
                 uiState.spendingByCategory.mapIndexed { index, data ->
@@ -180,14 +202,31 @@ private fun SpendingByCategoryChart(uiState: ReportsUiState) {
                 ChartEntryModelProducer(listOf(entries))
             }
 
-            Chart(
-                chart = columnChart(),
-                model = modelProducer.getModel() ?: return,
-                startAxis = rememberStartAxis(),
-                bottomAxis = rememberBottomAxis(valueFormatter = { value, _ ->
-                    labels.getOrNull(value.toInt()) ?: ""
-                })
-            )
+            val chartModel = modelProducer.getModel()
+            if (chartModel != null) {
+                Chart(
+                    chart = columnChart(),
+                    model = chartModel,
+                    modifier = Modifier.height(200.dp),
+                    startAxis = rememberStartAxis(),
+                    bottomAxis = rememberBottomAxis(valueFormatter = { value, _ ->
+                        labels.getOrNull(value.toInt()) ?: ""
+                    })
+                )
+            } else {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceVariant
+                    )
+                ) {
+                    Text(
+                        text = "Unable to generate chart",
+                        modifier = Modifier.padding(16.dp),
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                }
+            }
         }
     }
 }
@@ -202,7 +241,18 @@ private fun IncomeVsExpenseChart(uiState: ReportsUiState) {
         )
 
         if (uiState.monthlyIncomeExpense.isEmpty()) {
-            Text("No transaction data available for the selected period.")
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant
+                )
+            ) {
+                Text(
+                    text = "No transaction data available for the selected period.",
+                    modifier = Modifier.padding(16.dp),
+                    style = MaterialTheme.typography.bodyMedium
+                )
+            }
         } else {
             val incomeEntries = remember(uiState.monthlyIncomeExpense) {
                 uiState.monthlyIncomeExpense.mapIndexed { index, data ->
@@ -221,14 +271,210 @@ private fun IncomeVsExpenseChart(uiState: ReportsUiState) {
                 ChartEntryModelProducer(listOf(incomeEntries, expenseEntries))
             }
 
-            Chart(
-                chart = columnChart(),
-                model = modelProducer.getModel() ?: return,
-                startAxis = rememberStartAxis(),
-                bottomAxis = rememberBottomAxis(valueFormatter = { value, _ ->
-                    labels.getOrNull(value.toInt()) ?: ""
-                })
+            val chartModel = modelProducer.getModel()
+            if (chartModel != null) {
+                Chart(
+                    chart = columnChart(),
+                    model = chartModel,
+                    modifier = Modifier.height(200.dp),
+                    startAxis = rememberStartAxis(),
+                    bottomAxis = rememberBottomAxis(valueFormatter = { value, _ ->
+                        labels.getOrNull(value.toInt()) ?: ""
+                    })
+                )
+            } else {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceVariant
+                    )
+                ) {
+                    Text(
+                        text = "Unable to generate chart",
+                        modifier = Modifier.padding(16.dp),
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun SpendingInsightsSection(insights: List<SpendingInsight>) {
+    if (insights.isEmpty()) return
+    
+    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        Text(
+            text = "Spending Insights",
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.SemiBold
+        )
+        
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            insights.take(2).forEach { insight ->
+                InsightCard(
+                    insight = insight,
+                    modifier = Modifier.weight(1f)
+                )
+            }
+        }
+        
+        if (insights.size > 2) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                insights.drop(2).take(2).forEach { insight ->
+                    InsightCard(
+                        insight = insight,
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun InsightCard(
+    insight: SpendingInsight,
+    modifier: Modifier = Modifier
+) {
+    Card(
+        modifier = modifier,
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.primaryContainer
+        )
+    ) {
+        Column(modifier = Modifier.padding(12.dp)) {
+            Text(
+                text = insight.title,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onPrimaryContainer
             )
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(
+                text = insight.value,
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onPrimaryContainer
+            )
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(
+                text = insight.description,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
+            )
+        }
+    }
+}
+
+@Composable
+private fun TopCategoriesList(categories: List<CategorySpending>) {
+    if (categories.isEmpty()) return
+    
+    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        Text(
+            text = "Top Spending Categories",
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.SemiBold
+        )
+        
+        categories.take(5).forEach { category ->
+            CategorySpendingItem(category = category)
+        }
+    }
+}
+
+@Composable
+private fun CategorySpendingItem(category: CategorySpending) {
+    val currencyFormat = remember { NumberFormat.getCurrencyInstance(Locale.getDefault()) }
+    
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant
+        )
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = category.categoryName,
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.SemiBold
+                )
+                Text(
+                    text = "${category.transactionCount} transactions • Avg: ${currencyFormat.format(category.averageAmount)}",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            Text(
+                text = currencyFormat.format(category.amount),
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.error
+            )
+        }
+    }
+}
+
+@Composable
+private fun PaymentMethodBreakdown(paymentMethods: List<PaymentMethodSpending>) {
+    if (paymentMethods.isEmpty()) return
+    
+    val currencyFormat = remember { NumberFormat.getCurrencyInstance(Locale.getDefault()) }
+    
+    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        Text(
+            text = "Payment Method Breakdown",
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.SemiBold
+        )
+        
+        paymentMethods.forEach { method ->
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant
+                )
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = method.paymentMethod,
+                            style = MaterialTheme.typography.titleSmall,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                        Text(
+                            text = "${method.transactionCount} transactions",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                    Text(
+                        text = currencyFormat.format(method.amount),
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            }
         }
     }
 }
