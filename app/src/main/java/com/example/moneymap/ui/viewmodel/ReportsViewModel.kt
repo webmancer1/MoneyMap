@@ -105,8 +105,11 @@ class ReportsViewModel @Inject constructor(
         categories: List<Category>,
         period: ReportPeriod
     ): ReportsUiState {
-        val (startDate, endDate) = calculatePeriodRange(period)
-        val filtered = transactions.filter { it.date in startDate..endDate }
+        return try {
+            val (startDate, endDate) = calculatePeriodRange(period)
+            val filtered = transactions.filter { 
+                it.date >= startDate && it.date <= endDate 
+            }
 
         val totalIncome = filtered.filter { it.type == TransactionType.INCOME }.sumOf { it.amount }
         val totalExpense = filtered.filter { it.type == TransactionType.EXPENSE }.sumOf { it.amount }
@@ -133,13 +136,15 @@ class ReportsViewModel @Inject constructor(
         
         val paymentMethodSpending = expenseTransactions
             .filter { it.paymentMethod != null }
-            .groupBy { it.paymentMethod!! }
-            .map { (method, transactions) ->
-                PaymentMethodSpending(
-                    paymentMethod = method.name.replace("_", " "),
-                    amount = transactions.sumOf { it.amount },
-                    transactionCount = transactions.size
-                )
+            .groupBy { it.paymentMethod }
+            .mapNotNull { (method, transactions) ->
+                method?.let { m ->
+                    PaymentMethodSpending(
+                        paymentMethod = m.name.replace("_", " "),
+                        amount = transactions.sumOf { it.amount },
+                        transactionCount = transactions.size
+                    )
+                }
             }
             .sortedByDescending { it.amount }
 
@@ -163,18 +168,33 @@ class ReportsViewModel @Inject constructor(
             period = period
         )
 
-        return ReportsUiState(
-            selectedPeriod = period,
-            totalIncome = totalIncome,
-            totalExpense = totalExpense,
-            spendingByCategory = spendingByCategory,
-            monthlyIncomeExpense = monthlyIncomeExpense,
-            paymentMethodSpending = paymentMethodSpending,
-            spendingInsights = spendingInsights,
-            averageDailySpending = averageDailySpending,
-            averageTransactionAmount = averageTransactionAmount,
-            totalTransactions = totalTransactions
-        )
+            ReportsUiState(
+                selectedPeriod = period,
+                totalIncome = totalIncome,
+                totalExpense = totalExpense,
+                spendingByCategory = spendingByCategory,
+                monthlyIncomeExpense = monthlyIncomeExpense,
+                paymentMethodSpending = paymentMethodSpending,
+                spendingInsights = spendingInsights,
+                averageDailySpending = averageDailySpending,
+                averageTransactionAmount = averageTransactionAmount,
+                totalTransactions = totalTransactions
+            )
+        } catch (e: Exception) {
+            // Return empty state if there's an error
+            ReportsUiState(
+                selectedPeriod = period,
+                totalIncome = 0.0,
+                totalExpense = 0.0,
+                spendingByCategory = emptyList(),
+                monthlyIncomeExpense = emptyList(),
+                paymentMethodSpending = emptyList(),
+                spendingInsights = emptyList(),
+                averageDailySpending = 0.0,
+                averageTransactionAmount = 0.0,
+                totalTransactions = 0
+            )
+        }
     }
 
     private fun calculatePeriodRange(period: ReportPeriod): Pair<Long, Long> {

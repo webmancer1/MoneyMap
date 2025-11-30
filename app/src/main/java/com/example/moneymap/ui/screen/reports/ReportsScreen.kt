@@ -24,9 +24,13 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
@@ -198,21 +202,61 @@ private fun SpendingByCategoryChart(uiState: ReportsUiState) {
             val labels = remember(uiState.spendingByCategory) {
                 uiState.spendingByCategory.map { it.categoryName }
             }
-            val modelProducer = remember(entries) {
-                ChartEntryModelProducer(listOf(entries))
+            val modelProducer = remember { ChartEntryModelProducer() }
+            var hasModel by remember { mutableStateOf(false) }
+
+            LaunchedEffect(entries.size) {
+                if (entries.isNotEmpty()) {
+                    try {
+                        modelProducer.setEntries(listOf(entries))
+                        hasModel = true
+                    } catch (e: Exception) {
+                        hasModel = false
+                    }
+                } else {
+                    hasModel = false
+                }
             }
 
-            val chartModel = modelProducer.getModel()
-            if (chartModel != null) {
-                Chart(
-                    chart = columnChart(),
-                    model = chartModel,
-                    modifier = Modifier.height(200.dp),
-                    startAxis = rememberStartAxis(),
-                    bottomAxis = rememberBottomAxis(valueFormatter = { value, _ ->
-                        labels.getOrNull(value.toInt()) ?: ""
-                    })
-                )
+            if (hasModel && entries.isNotEmpty()) {
+                val chartModel = modelProducer.getModel()
+                if (chartModel != null) {
+                    Chart(
+                        chart = columnChart(),
+                        model = chartModel,
+                        modifier = Modifier.height(200.dp),
+                        startAxis = rememberStartAxis(),
+                        bottomAxis = rememberBottomAxis(valueFormatter = { value, _ ->
+                            labels.getOrNull(value.toInt()) ?: ""
+                        })
+                    )
+                } else {
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.surfaceVariant
+                        )
+                    ) {
+                        Text(
+                            text = "Loading chart...",
+                            modifier = Modifier.padding(16.dp),
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                    }
+                }
+            } else if (entries.isEmpty()) {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceVariant
+                    )
+                ) {
+                    Text(
+                        text = "No data to display",
+                        modifier = Modifier.padding(16.dp),
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                }
             } else {
                 Card(
                     modifier = Modifier.fillMaxWidth(),
@@ -221,7 +265,7 @@ private fun SpendingByCategoryChart(uiState: ReportsUiState) {
                     )
                 ) {
                     Text(
-                        text = "Unable to generate chart",
+                        text = "Loading chart...",
                         modifier = Modifier.padding(16.dp),
                         style = MaterialTheme.typography.bodyMedium
                     )
@@ -267,21 +311,61 @@ private fun IncomeVsExpenseChart(uiState: ReportsUiState) {
             val labels = remember(uiState.monthlyIncomeExpense) {
                 uiState.monthlyIncomeExpense.map { it.monthLabel }
             }
-            val modelProducer = remember(incomeEntries, expenseEntries) {
-                ChartEntryModelProducer(listOf(incomeEntries, expenseEntries))
+            val modelProducer = remember { ChartEntryModelProducer() }
+            var hasModel by remember { mutableStateOf(false) }
+
+            LaunchedEffect(incomeEntries.size, expenseEntries.size) {
+                if (incomeEntries.isNotEmpty() || expenseEntries.isNotEmpty()) {
+                    try {
+                        modelProducer.setEntries(listOf(incomeEntries, expenseEntries))
+                        hasModel = true
+                    } catch (e: Exception) {
+                        hasModel = false
+                    }
+                } else {
+                    hasModel = false
+                }
             }
 
-            val chartModel = modelProducer.getModel()
-            if (chartModel != null) {
-                Chart(
-                    chart = columnChart(),
-                    model = chartModel,
-                    modifier = Modifier.height(200.dp),
-                    startAxis = rememberStartAxis(),
-                    bottomAxis = rememberBottomAxis(valueFormatter = { value, _ ->
-                        labels.getOrNull(value.toInt()) ?: ""
-                    })
-                )
+            if (hasModel && (incomeEntries.isNotEmpty() || expenseEntries.isNotEmpty())) {
+                val chartModel = modelProducer.getModel()
+                if (chartModel != null) {
+                    Chart(
+                        chart = columnChart(),
+                        model = chartModel,
+                        modifier = Modifier.height(200.dp),
+                        startAxis = rememberStartAxis(),
+                        bottomAxis = rememberBottomAxis(valueFormatter = { value, _ ->
+                            labels.getOrNull(value.toInt()) ?: ""
+                        })
+                    )
+                } else {
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.surfaceVariant
+                        )
+                    ) {
+                        Text(
+                            text = "Loading chart...",
+                            modifier = Modifier.padding(16.dp),
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                    }
+                }
+            } else if (incomeEntries.isEmpty() && expenseEntries.isEmpty()) {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceVariant
+                    )
+                ) {
+                    Text(
+                        text = "No data to display",
+                        modifier = Modifier.padding(16.dp),
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                }
             } else {
                 Card(
                     modifier = Modifier.fillMaxWidth(),
@@ -290,7 +374,7 @@ private fun IncomeVsExpenseChart(uiState: ReportsUiState) {
                     )
                 ) {
                     Text(
-                        text = "Unable to generate chart",
+                        text = "Loading chart...",
                         modifier = Modifier.padding(16.dp),
                         style = MaterialTheme.typography.bodyMedium
                     )
