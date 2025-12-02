@@ -30,6 +30,9 @@ import com.example.moneymap.ui.screen.transaction.AddTransactionScreen
 import com.example.moneymap.ui.screen.transaction.TransactionListScreen
 import com.example.moneymap.ui.screen.reports.ReportsScreen
 import com.example.moneymap.ui.screen.budget.BudgetScreen
+import com.example.moneymap.ui.screen.debt.DebtListScreen
+import com.example.moneymap.ui.screen.debt.AddEditDebtScreen
+import com.example.moneymap.ui.screen.insights.InsightsScreen
 import com.example.moneymap.ui.screen.settings.SettingsScreen
 
 @Composable
@@ -133,6 +136,12 @@ fun MoneyMapNavigation(
                     onNavigateToBudgets = {
                         navController.navigate(NavRoutes.BUDGETS)
                     },
+                    onNavigateToDebts = {
+                        navController.navigate(NavRoutes.DEBTS)
+                    },
+                    onNavigateToInsights = {
+                        navController.navigate(NavRoutes.INSIGHTS)
+                    },
                     onNavigateToSettings = {
                         navController.navigate(NavRoutes.SETTINGS)
                     }
@@ -170,6 +179,36 @@ fun MoneyMapNavigation(
             }
             composable(NavRoutes.BUDGETS) {
                 BudgetScreen(
+                    onNavigateBack = { navController.popBackStack() }
+                )
+            }
+            composable(NavRoutes.DEBTS) {
+                DebtListScreen(
+                    onNavigateBack = { navController.popBackStack() },
+                    onNavigateToAddDebt = {
+                        navController.navigate(NavRoutes.ADD_DEBT)
+                    },
+                    onNavigateToEditDebt = { debtId ->
+                        navController.navigate("edit_debt/$debtId")
+                    }
+                )
+            }
+            composable(NavRoutes.ADD_DEBT) {
+                AddEditDebtScreen(
+                    onNavigateBack = { navController.popBackStack() },
+                    onDebtSaved = { navController.popBackStack() }
+                )
+            }
+            composable("edit_debt/{debtId}") { backStackEntry ->
+                val debtId = backStackEntry.arguments?.getString("debtId") ?: ""
+                AddEditDebtScreen(
+                    debtId = debtId,
+                    onNavigateBack = { navController.popBackStack() },
+                    onDebtSaved = { navController.popBackStack() }
+                )
+            }
+            composable(NavRoutes.INSIGHTS) {
+                InsightsScreen(
                     onNavigateBack = { navController.popBackStack() }
                 )
             }
