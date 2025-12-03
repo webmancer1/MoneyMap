@@ -33,7 +33,11 @@ fun HomeScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val recentTransactions by viewModel.recentTransactions.collectAsState()
-    val currencyFormat = NumberFormat.getCurrencyInstance(Locale.getDefault())
+    val currencyFormat = androidx.compose.runtime.remember(uiState.currencyCode) {
+        NumberFormat.getCurrencyInstance(Locale.getDefault()).apply {
+            currency = java.util.Currency.getInstance(uiState.currencyCode)
+        }
+    }
 
     Scaffold(
         topBar = {
@@ -220,7 +224,11 @@ fun HomeScreen(
                 }
             } else {
                 items(recentTransactions.take(10)) { transaction ->
-                    TransactionItem(transaction = transaction)
+                    TransactionItem(
+                        transaction = transaction,
+                        displayCurrency = uiState.currencyCode,
+                        convertAmount = viewModel::convertAmount
+                    )
                 }
             }
         }
@@ -228,8 +236,20 @@ fun HomeScreen(
 }
 
 @Composable
-fun TransactionItem(transaction: com.example.moneymap.data.model.Transaction) {
-    val currencyFormat = NumberFormat.getCurrencyInstance(Locale.getDefault())
+fun TransactionItem(
+    transaction: com.example.moneymap.data.model.Transaction,
+    displayCurrency: String,
+    convertAmount: (Double, String, String) -> Double
+) {
+    val currencyFormat = androidx.compose.runtime.remember(displayCurrency) {
+        NumberFormat.getCurrencyInstance(Locale.getDefault()).apply {
+            currency = java.util.Currency.getInstance(displayCurrency)
+        }
+    }
+    val convertedAmount = androidx.compose.runtime.remember(transaction.amount, transaction.currency, displayCurrency) {
+        convertAmount(transaction.amount, transaction.currency, displayCurrency)
+    }
+
     Card(
         modifier = Modifier.fillMaxWidth()
     ) {
@@ -253,7 +273,7 @@ fun TransactionItem(transaction: com.example.moneymap.data.model.Transaction) {
                 )
             }
             Text(
-                text = "${if (transaction.type == com.example.moneymap.data.model.TransactionType.INCOME) "+" else "-"}${currencyFormat.format(transaction.amount)}",
+                text = "${if (transaction.type == com.example.moneymap.data.model.TransactionType.INCOME) "+" else "-"}${currencyFormat.format(convertedAmount)}",
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
                 color = if (transaction.type == com.example.moneymap.data.model.TransactionType.INCOME) {

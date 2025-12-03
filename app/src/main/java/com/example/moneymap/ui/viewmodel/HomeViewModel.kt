@@ -18,6 +18,7 @@ data class HomeUiState(
     val totalIncome: Double = 0.0,
     val totalExpenses: Double = 0.0,
     val balance: Double = 0.0,
+    val currencyCode: String = "KES",
     val isLoading: Boolean = false
 )
 
@@ -85,6 +86,7 @@ class HomeViewModel @Inject constructor(
                     totalIncome = income,
                     totalExpenses = expenses,
                     balance = income - expenses,
+                    currencyCode = displayCurrency,
                     isLoading = false
                 )
             }
@@ -105,6 +107,10 @@ class HomeViewModel @Inject constructor(
         calendar.set(Calendar.SECOND, 59)
         val endDate = calendar.timeInMillis
         return startDate to endDate
+    }
+
+    fun convertAmount(amount: Double, fromCurrency: String, toCurrency: String): Double {
+        return currencyRepository.convert(amount, fromCurrency, toCurrency)
     }
 }
 
