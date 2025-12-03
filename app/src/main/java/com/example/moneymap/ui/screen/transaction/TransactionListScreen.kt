@@ -41,6 +41,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
@@ -66,6 +67,7 @@ fun TransactionListScreen(
 ) {
     val transactions by viewModel.transactions.collectAsState()
     val categories by viewModel.categories.collectAsState()
+    val displayCurrency by viewModel.displayCurrency.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
     val coroutineScope = rememberCoroutineScope()
 
@@ -73,7 +75,12 @@ fun TransactionListScreen(
     var searchQuery by remember { mutableStateOf("") }
     var showDeleteDialogFor by remember { mutableStateOf<Transaction?>(null) }
 
-    val currencyFormat = remember { NumberFormat.getCurrencyInstance(Locale.getDefault()) }
+    val currencyFormat = remember(displayCurrency) { 
+        val locale = Locale.getDefault()
+        NumberFormat.getCurrencyInstance(locale).apply {
+            currency = java.util.Currency.getInstance(displayCurrency)
+        }
+    }
     val dateFormat = remember { SimpleDateFormat("MMM dd, yyyy", Locale.getDefault()) }
 
     val filteredTransactions = remember(transactions, selectedTypeFilter, searchQuery) {
@@ -189,6 +196,10 @@ fun TransactionListScreen(
                         TransactionListItem(
                             transaction = transaction,
                             category = category,
+                            displayCurrency = displayCurrency,
+                            convertAmount = { amount, fromCurrency ->
+                                viewModel.convertAmount(amount, fromCurrency)
+                            },
                             currencyFormat = currencyFormat,
                             dateFormat = dateFormat,
                             onEdit = { onNavigateToEditTransaction(transaction.id) },
@@ -248,11 +259,16 @@ private fun EmptyTransactionsState(
 private fun TransactionListItem(
     transaction: Transaction,
     category: Category?,
+    displayCurrency: String,
+    convertAmount: (Double, String) -> Double,
     currencyFormat: NumberFormat,
     dateFormat: SimpleDateFormat,
     onEdit: () -> Unit,
     onDelete: () -> Unit
 ) {
+    val convertedAmount = remember(transaction.amount, transaction.currency, displayCurrency) {
+        convertAmount(transaction.amount, transaction.currency)
+    }
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(
@@ -277,19 +293,28 @@ private fun TransactionListItem(
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
-                Text(
-                    text = buildString {
-                        append(if (transaction.type == TransactionType.INCOME) "+" else "-")
-                        append(currencyFormat.format(transaction.amount))
-                    },
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Bold,
-                    color = if (transaction.type == TransactionType.INCOME) {
-                        MaterialTheme.colorScheme.primary
-                    } else {
-                        MaterialTheme.colorScheme.error
+                Column(horizontalAlignment = Alignment.End) {
+                    Text(
+                        text = buildString {
+                            append(if (transaction.type == TransactionType.INCOME) "+" else "-")
+                            append(currencyFormat.format(convertedAmount))
+                        },
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold,
+                        color = if (transaction.type == TransactionType.INCOME) {
+                            MaterialTheme.colorScheme.primary
+                        } else {
+                            MaterialTheme.colorScheme.error
+                        }
+                    )
+                    if (transaction.currency != currencyFormat.currency.currencyCode) {
+                        Text(
+                            text = "${transaction.currency} ${String.format("%.2f", transaction.amount)}",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
                     }
-                )
+                }
             }
 
             transaction.notes?.takeIf { it.isNotBlank() }?.let { notes ->

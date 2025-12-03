@@ -5,7 +5,9 @@ import androidx.lifecycle.viewModelScope
 import com.example.moneymap.data.model.Category
 import com.example.moneymap.data.model.Transaction
 import com.example.moneymap.data.model.TransactionType
+import com.example.moneymap.data.preferences.SettingsRepository
 import com.example.moneymap.data.repository.CategoryRepository
+import com.example.moneymap.data.repository.CurrencyRepository
 import com.example.moneymap.data.repository.TransactionRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -68,7 +70,9 @@ data class ReportsUiState(
 @HiltViewModel
 class ReportsViewModel @Inject constructor(
     private val transactionRepository: TransactionRepository,
-    private val categoryRepository: CategoryRepository
+    private val categoryRepository: CategoryRepository,
+    private val settingsRepository: SettingsRepository,
+    private val currencyRepository: CurrencyRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(ReportsUiState())
@@ -91,9 +95,15 @@ class ReportsViewModel @Inject constructor(
             combine(
                 transactionRepository.getAllTransactions(),
                 categoryRepository.getAllCategories(),
-                selectedPeriod
-            ) { transactions, categories, period ->
-                buildUiState(transactions, categories, period)
+                selectedPeriod,
+                settingsRepository.settingsFlow
+            ) { transactions, categories, period, settings ->
+                buildUiState(
+                    transactions = transactions,
+                    categories = categories,
+                    period = period,
+                    displayCurrency = settings.currency
+                )
             }.collect { state ->
                 _uiState.value = state
             }
@@ -103,7 +113,8 @@ class ReportsViewModel @Inject constructor(
     private fun buildUiState(
         transactions: List<Transaction>,
         categories: List<Category>,
-        period: ReportPeriod
+        period: ReportPeriod,
+        displayCurrency: String
     ): ReportsUiState {
         return try {
             val (startDate, endDate) = calculatePeriodRange(period)
@@ -111,8 +122,12 @@ class ReportsViewModel @Inject constructor(
                 it.date >= startDate && it.date <= endDate 
             }
 
-        val totalIncome = filtered.filter { it.type == TransactionType.INCOME }.sumOf { it.amount }
-        val totalExpense = filtered.filter { it.type == TransactionType.EXPENSE }.sumOf { it.amount }
+        val totalIncome = filtered
+            .filter { it.type == TransactionType.INCOME }
+            .sumOf { tx -> currencyRepository.convert(tx.amount, tx.currency, displayCurrency) }
+        val totalExpense = filtered
+            .filter { it.type == TransactionType.EXPENSE }
+            .sumOf { tx -> currencyRepository.convert(tx.amount, tx.currency, displayCurrency) }
 
         val expenseTransactions = filtered.filter { it.type == TransactionType.EXPENSE }
         
@@ -121,7 +136,9 @@ class ReportsViewModel @Inject constructor(
                 categories.firstOrNull { it.id == transaction.categoryId }?.name ?: "Uncategorized"
             }
             .map { (categoryName, categoryTransactions) ->
-                val total = categoryTransactions.sumOf { it.amount }
+                val total = categoryTransactions.sumOf { tx ->
+                    currencyRepository.convert(tx.amount, tx.currency, displayCurrency)
+                }
                 val count = categoryTransactions.size
                 CategorySpending(
                     categoryName = categoryName,
@@ -132,7 +149,7 @@ class ReportsViewModel @Inject constructor(
             }
             .sortedByDescending { it.amount }
 
-        val monthlyIncomeExpense = computeMonthlyIncomeExpense(filtered, period)
+        val monthlyIncomeExpense = computeMonthlyIncomeExpense(filtered, period, displayCurrency)
         
         val paymentMethodSpending = expenseTransactions
             .filter { it.paymentMethod != null }
@@ -141,7 +158,9 @@ class ReportsViewModel @Inject constructor(
                 method?.let { m ->
                     PaymentMethodSpending(
                         paymentMethod = m.name.replace("_", " "),
-                        amount = transactions.sumOf { it.amount },
+                        amount = transactions.sumOf { tx ->
+                            currencyRepository.convert(tx.amount, tx.currency, displayCurrency)
+                        },
                         transactionCount = transactions.size
                     )
                 }
@@ -218,7 +237,8 @@ class ReportsViewModel @Inject constructor(
 
     private fun computeMonthlyIncomeExpense(
         transactions: List<Transaction>,
-        period: ReportPeriod
+        period: ReportPeriod,
+        displayCurrency: String
     ): List<MonthlyIncomeExpense> {
         if (transactions.isEmpty()) return emptyList()
 
@@ -244,10 +264,10 @@ class ReportsViewModel @Inject constructor(
             val monthlyTransactions = transactions.filter { it.date in start..end }
             val income = monthlyTransactions
                 .filter { it.type == TransactionType.INCOME }
-                .sumOf { it.amount }
+                .sumOf { tx -> currencyRepository.convert(tx.amount, tx.currency, displayCurrency) }
             val expense = monthlyTransactions
                 .filter { it.type == TransactionType.EXPENSE }
-                .sumOf { it.amount }
+                .sumOf { tx -> currencyRepository.convert(tx.amount, tx.currency, displayCurrency) }
 
             val label = monthFormat.format(Date(start))
             result.add(MonthlyIncomeExpense(label, income, expense))

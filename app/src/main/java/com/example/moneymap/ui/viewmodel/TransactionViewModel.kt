@@ -9,7 +9,9 @@ import com.example.moneymap.data.model.RecurringPattern
 import com.example.moneymap.data.model.SyncStatus
 import com.example.moneymap.data.model.Transaction
 import com.example.moneymap.data.model.TransactionType
+import com.example.moneymap.data.preferences.SettingsRepository
 import com.example.moneymap.data.repository.CategoryRepository
+import com.example.moneymap.data.repository.CurrencyRepository
 import com.example.moneymap.data.repository.TransactionRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -19,6 +21,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.stateIn
+
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
@@ -54,7 +58,9 @@ data class TransactionListUiState(
 @HiltViewModel
 class TransactionViewModel @Inject constructor(
     private val transactionRepository: TransactionRepository,
-    private val categoryRepository: CategoryRepository
+    private val categoryRepository: CategoryRepository,
+    private val settingsRepository: SettingsRepository,
+    private val currencyRepository: CurrencyRepository
 ) : ViewModel() {
 
     val transactions = transactionRepository.getAllTransactions()
@@ -87,6 +93,26 @@ class TransactionViewModel @Inject constructor(
     val snackbarMessage = _snackbarMessage.asSharedFlow()
 
     private var recentlyDeletedTransaction: Transaction? = null
+
+    val displayCurrency: StateFlow<String> = settingsRepository.settingsFlow
+        .map { it.currency }
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = "KES"
+        )
+
+    init {
+        // Warm up FX rates in the background
+        viewModelScope.launch {
+            currencyRepository.refreshRatesIfStale()
+        }
+    }
+
+    fun convertAmount(amount: Double, fromCurrency: String): Double {
+        val targetCurrency: String = displayCurrency.value
+        return currencyRepository.convert(amount, fromCurrency, targetCurrency)
+    }
 
     fun updateAmount(amount: String) {
         _formState.update { it.copy(amount = amount.filter { char -> char.isDigit() || char == '.' }) }

@@ -3,7 +3,9 @@ package com.example.moneymap.ui.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.moneymap.data.model.TransactionType
+import com.example.moneymap.data.preferences.SettingsRepository
 import com.example.moneymap.data.repository.CategoryRepository
+import com.example.moneymap.data.repository.CurrencyRepository
 import com.example.moneymap.data.repository.TransactionRepository
 import com.example.moneymap.data.sync.SyncManager
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -23,7 +25,9 @@ data class HomeUiState(
 class HomeViewModel @Inject constructor(
     private val transactionRepository: TransactionRepository,
     private val categoryRepository: CategoryRepository,
-    private val syncManager: SyncManager
+    private val syncManager: SyncManager,
+    private val settingsRepository: SettingsRepository,
+    private val currencyRepository: CurrencyRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(HomeUiState())
@@ -40,6 +44,10 @@ class HomeViewModel @Inject constructor(
         initializeCategories()
         observeMonthlySummary()
         schedulePeriodicSync()
+        // Warm up FX rates in the background so summaries can use real-time values.
+        viewModelScope.launch {
+            currencyRepository.refreshRatesIfStale()
+        }
     }
 
     private fun schedulePeriodicSync() {
@@ -57,14 +65,21 @@ class HomeViewModel @Inject constructor(
     private fun observeMonthlySummary() {
         val (startDate, endDate) = currentMonthRange()
         transactionRepository.getTransactionsByDateRange(startDate, endDate)
+            .combine(settingsRepository.settingsFlow) { transactions, settings ->
+                Pair(transactions, settings.currency)
+            }
             .onStart { _uiState.value = _uiState.value.copy(isLoading = true) }
-            .onEach { transactions ->
+            .onEach { (transactions, displayCurrency) ->
                 val income = transactions
                     .filter { it.type == TransactionType.INCOME }
-                    .sumOf { it.amount }
+                    .sumOf { tx ->
+                        currencyRepository.convert(tx.amount, tx.currency, displayCurrency)
+                    }
                 val expenses = transactions
                     .filter { it.type == TransactionType.EXPENSE }
-                    .sumOf { it.amount }
+                    .sumOf { tx ->
+                        currencyRepository.convert(tx.amount, tx.currency, displayCurrency)
+                    }
 
                 _uiState.value = _uiState.value.copy(
                     totalIncome = income,
