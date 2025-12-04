@@ -35,6 +35,7 @@ class HomeViewModel @Inject constructor(
     val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
 
     val recentTransactions = transactionRepository.getAllTransactions()
+        .map { list -> list.sortedByDescending { it.date } }
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),
