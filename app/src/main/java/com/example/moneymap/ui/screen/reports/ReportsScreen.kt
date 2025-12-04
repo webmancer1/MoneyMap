@@ -195,8 +195,12 @@ private fun SpendingByCategoryChart(uiState: ReportsUiState) {
             }
         } else {
             val entries = remember(uiState.spendingByCategory) {
-                uiState.spendingByCategory.mapIndexed { index, data ->
-                    entryOf(index.toFloat(), data.amount.toFloat())
+                uiState.spendingByCategory.mapIndexedNotNull { index, data ->
+                    if (data.amount.isFinite() && data.amount >= 0) {
+                        entryOf(index.toFloat(), data.amount.toFloat())
+                    } else {
+                        null
+                    }
                 }
             }
             val labels = remember(uiState.spendingByCategory) {
@@ -211,6 +215,7 @@ private fun SpendingByCategoryChart(uiState: ReportsUiState) {
                         modelProducer.setEntries(listOf(entries))
                         hasModel = true
                     } catch (e: Exception) {
+                        e.printStackTrace()
                         hasModel = false
                     }
                 } else {
@@ -299,13 +304,21 @@ private fun IncomeVsExpenseChart(uiState: ReportsUiState) {
             }
         } else {
             val incomeEntries = remember(uiState.monthlyIncomeExpense) {
-                uiState.monthlyIncomeExpense.mapIndexed { index, data ->
-                    entryOf(index.toFloat(), data.income.toFloat())
+                uiState.monthlyIncomeExpense.mapIndexedNotNull { index, data ->
+                    if (data.income.isFinite() && data.income >= 0) {
+                        entryOf(index.toFloat(), data.income.toFloat())
+                    } else {
+                        null
+                    }
                 }
             }
             val expenseEntries = remember(uiState.monthlyIncomeExpense) {
-                uiState.monthlyIncomeExpense.mapIndexed { index, data ->
-                    entryOf(index.toFloat(), data.expense.toFloat())
+                uiState.monthlyIncomeExpense.mapIndexedNotNull { index, data ->
+                    if (data.expense.isFinite() && data.expense >= 0) {
+                        entryOf(index.toFloat(), data.expense.toFloat())
+                    } else {
+                        null
+                    }
                 }
             }
             val labels = remember(uiState.monthlyIncomeExpense) {
@@ -317,9 +330,12 @@ private fun IncomeVsExpenseChart(uiState: ReportsUiState) {
             LaunchedEffect(incomeEntries, expenseEntries) {
                 if (incomeEntries.isNotEmpty() || expenseEntries.isNotEmpty()) {
                     try {
-                        modelProducer.setEntries(listOf(incomeEntries, expenseEntries))
+                        val entriesList = listOf(incomeEntries, expenseEntries)
+                        // Filter out empty lists if needed, but Vico expects consistent series
+                        modelProducer.setEntries(entriesList)
                         hasModel = true
                     } catch (e: Exception) {
+                        e.printStackTrace()
                         hasModel = false
                     }
                 } else {

@@ -122,76 +122,76 @@ class ReportsViewModel @Inject constructor(
                 it.date >= startDate && it.date <= endDate 
             }
 
-        val totalIncome = filtered
-            .filter { it.type == TransactionType.INCOME }
-            .sumOf { tx -> currencyRepository.convert(tx.amount, tx.currency, displayCurrency) }
-        val totalExpense = filtered
-            .filter { it.type == TransactionType.EXPENSE }
-            .sumOf { tx -> currencyRepository.convert(tx.amount, tx.currency, displayCurrency) }
+            val totalIncome = filtered
+                .filter { it.type == TransactionType.INCOME }
+                .sumOf { tx -> currencyRepository.convert(tx.amount, tx.currency, displayCurrency) }
+            val totalExpense = filtered
+                .filter { it.type == TransactionType.EXPENSE }
+                .sumOf { tx -> currencyRepository.convert(tx.amount, tx.currency, displayCurrency) }
 
-        val expenseTransactions = filtered.filter { it.type == TransactionType.EXPENSE }
-        
-        val spendingByCategory = expenseTransactions
-            .groupBy { transaction ->
-                categories.firstOrNull { it.id == transaction.categoryId }?.name ?: "Uncategorized"
-            }
-            .map { (categoryName, categoryTransactions) ->
-                val total = categoryTransactions.sumOf { tx ->
-                    currencyRepository.convert(tx.amount, tx.currency, displayCurrency)
+            val expenseTransactions = filtered.filter { it.type == TransactionType.EXPENSE }
+            
+            val spendingByCategory = expenseTransactions
+                .groupBy { transaction ->
+                    categories.firstOrNull { it.id == transaction.categoryId }?.name ?: "Uncategorized"
                 }
-                val count = categoryTransactions.size
-                val avg = if (count > 0) total / count else 0.0
-                CategorySpending(
-                    categoryName = categoryName,
-                    amount = if (total.isFinite()) total else 0.0,
-                    transactionCount = count,
-                    averageAmount = if (avg.isFinite()) avg else 0.0
-                )
-            }
-            .sortedByDescending { it.amount }
-
-        val monthlyIncomeExpense = computeMonthlyIncomeExpense(filtered, period, displayCurrency)
-        
-        val paymentMethodSpending = expenseTransactions
-            .filter { it.paymentMethod != null }
-            .groupBy { it.paymentMethod }
-            .mapNotNull { (method, transactions) ->
-                method?.let { m ->
-                    PaymentMethodSpending(
-                        paymentMethod = m.name.replace("_", " "),
-                        amount = let {
-                            val sum = transactions.sumOf { tx ->
-                                currencyRepository.convert(tx.amount, tx.currency, displayCurrency)
-                            }
-                            if (sum.isFinite()) sum else 0.0
-                        },
-                        transactionCount = transactions.size
+                .map { (categoryName, categoryTransactions) ->
+                    val total = categoryTransactions.sumOf { tx ->
+                        currencyRepository.convert(tx.amount, tx.currency, displayCurrency)
+                    }
+                    val count = categoryTransactions.size
+                    val avg = if (count > 0) total / count else 0.0
+                    CategorySpending(
+                        categoryName = categoryName,
+                        amount = if (total.isFinite()) total else 0.0,
+                        transactionCount = count,
+                        averageAmount = if (avg.isFinite()) avg else 0.0
                     )
                 }
-            }
-            .sortedByDescending { it.amount }
+                .sortedByDescending { it.amount }
 
-        val totalTransactions = filtered.size
-        val expenseCount = expenseTransactions.size
-        val averageTransactionAmount = if (expenseCount > 0) {
-            val avg = totalExpense / expenseCount
-            if (avg.isFinite()) avg else 0.0
-        } else 0.0
-        
-        val daysInPeriod = calculateDaysInPeriod(period)
-        val averageDailySpending = if (daysInPeriod > 0) {
-            val avg = totalExpense / daysInPeriod
-            if (avg.isFinite()) avg else 0.0
-        } else 0.0
+            val monthlyIncomeExpense = computeMonthlyIncomeExpense(filtered, period, displayCurrency)
+            
+            val paymentMethodSpending = expenseTransactions
+                .filter { it.paymentMethod != null }
+                .groupBy { it.paymentMethod }
+                .mapNotNull { (method, transactions) ->
+                    method?.let { m ->
+                        PaymentMethodSpending(
+                            paymentMethod = m.name.replace("_", " "),
+                            amount = let {
+                                val sum = transactions.sumOf { tx ->
+                                    currencyRepository.convert(tx.amount, tx.currency, displayCurrency)
+                                }
+                                if (sum.isFinite()) sum else 0.0
+                            },
+                            transactionCount = transactions.size
+                        )
+                    }
+                }
+                .sortedByDescending { it.amount }
 
-        val spendingInsights = buildSpendingInsights(
-            totalExpense = totalExpense,
-            totalIncome = totalIncome,
-            averageDailySpending = averageDailySpending,
-            topCategory = spendingByCategory.firstOrNull(),
-            expenseCount = expenseCount,
-            period = period
-        )
+            val totalTransactions = filtered.size
+            val expenseCount = expenseTransactions.size
+            val averageTransactionAmount = if (expenseCount > 0) {
+                val avg = totalExpense / expenseCount
+                if (avg.isFinite()) avg else 0.0
+            } else 0.0
+            
+            val daysInPeriod = calculateDaysInPeriod(period)
+            val averageDailySpending = if (daysInPeriod > 0) {
+                val avg = totalExpense / daysInPeriod
+                if (avg.isFinite()) avg else 0.0
+            } else 0.0
+
+            val spendingInsights = buildSpendingInsights(
+                totalExpense = if (totalExpense.isFinite()) totalExpense else 0.0,
+                totalIncome = if (totalIncome.isFinite()) totalIncome else 0.0,
+                averageDailySpending = averageDailySpending,
+                topCategory = spendingByCategory.firstOrNull(),
+                expenseCount = expenseCount,
+                period = period
+            )
 
             ReportsUiState(
                 selectedPeriod = period,
@@ -206,6 +206,7 @@ class ReportsViewModel @Inject constructor(
                 totalTransactions = totalTransactions
             )
         } catch (e: Exception) {
+            e.printStackTrace()
             // Return empty state if there's an error
             ReportsUiState(
                 selectedPeriod = period,
