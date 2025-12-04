@@ -205,7 +205,7 @@ private fun SpendingByCategoryChart(uiState: ReportsUiState) {
             val modelProducer = remember { ChartEntryModelProducer() }
             var hasModel by remember { mutableStateOf(false) }
 
-            LaunchedEffect(entries.size) {
+            LaunchedEffect(entries) {
                 if (entries.isNotEmpty()) {
                     try {
                         modelProducer.setEntries(listOf(entries))
@@ -314,7 +314,7 @@ private fun IncomeVsExpenseChart(uiState: ReportsUiState) {
             val modelProducer = remember { ChartEntryModelProducer() }
             var hasModel by remember { mutableStateOf(false) }
 
-            LaunchedEffect(incomeEntries.size, expenseEntries.size) {
+            LaunchedEffect(incomeEntries, expenseEntries) {
                 if (incomeEntries.isNotEmpty() || expenseEntries.isNotEmpty()) {
                     try {
                         modelProducer.setEntries(listOf(incomeEntries, expenseEntries))

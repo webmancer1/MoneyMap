@@ -122,9 +122,11 @@ class CurrencyRepository @Inject constructor() {
             amount * toRate
         } else if (base.equals(toCode, ignoreCase = true)) {
             // source -> base
+            if (fromRate == 0.0) return amount // Prevent division by zero
             amount / fromRate
         } else {
             // source -> base -> target
+            if (fromRate == 0.0) return amount // Prevent division by zero
             val amountInBase = amount / fromRate
             amountInBase * toRate
         }

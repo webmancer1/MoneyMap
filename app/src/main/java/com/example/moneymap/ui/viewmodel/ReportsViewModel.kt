@@ -140,11 +140,12 @@ class ReportsViewModel @Inject constructor(
                     currencyRepository.convert(tx.amount, tx.currency, displayCurrency)
                 }
                 val count = categoryTransactions.size
+                val avg = if (count > 0) total / count else 0.0
                 CategorySpending(
                     categoryName = categoryName,
-                    amount = total,
+                    amount = if (total.isFinite()) total else 0.0,
                     transactionCount = count,
-                    averageAmount = if (count > 0) total / count else 0.0
+                    averageAmount = if (avg.isFinite()) avg else 0.0
                 )
             }
             .sortedByDescending { it.amount }
@@ -158,8 +159,11 @@ class ReportsViewModel @Inject constructor(
                 method?.let { m ->
                     PaymentMethodSpending(
                         paymentMethod = m.name.replace("_", " "),
-                        amount = transactions.sumOf { tx ->
-                            currencyRepository.convert(tx.amount, tx.currency, displayCurrency)
+                        amount = let {
+                            val sum = transactions.sumOf { tx ->
+                                currencyRepository.convert(tx.amount, tx.currency, displayCurrency)
+                            }
+                            if (sum.isFinite()) sum else 0.0
                         },
                         transactionCount = transactions.size
                     )
@@ -170,12 +174,14 @@ class ReportsViewModel @Inject constructor(
         val totalTransactions = filtered.size
         val expenseCount = expenseTransactions.size
         val averageTransactionAmount = if (expenseCount > 0) {
-            totalExpense / expenseCount
+            val avg = totalExpense / expenseCount
+            if (avg.isFinite()) avg else 0.0
         } else 0.0
         
         val daysInPeriod = calculateDaysInPeriod(period)
         val averageDailySpending = if (daysInPeriod > 0) {
-            totalExpense / daysInPeriod
+            val avg = totalExpense / daysInPeriod
+            if (avg.isFinite()) avg else 0.0
         } else 0.0
 
         val spendingInsights = buildSpendingInsights(
@@ -189,8 +195,8 @@ class ReportsViewModel @Inject constructor(
 
             ReportsUiState(
                 selectedPeriod = period,
-                totalIncome = totalIncome,
-                totalExpense = totalExpense,
+                totalIncome = if (totalIncome.isFinite()) totalIncome else 0.0,
+                totalExpense = if (totalExpense.isFinite()) totalExpense else 0.0,
                 spendingByCategory = spendingByCategory,
                 monthlyIncomeExpense = monthlyIncomeExpense,
                 paymentMethodSpending = paymentMethodSpending,
