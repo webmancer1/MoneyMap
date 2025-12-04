@@ -344,11 +344,21 @@ private fun IncomeVsExpenseChart(uiState: ReportsUiState) {
             }
 
             if (hasModel && (incomeEntries.isNotEmpty() || expenseEntries.isNotEmpty())) {
-                val chartModel = modelProducer.getModel()
+                var chartModel by remember { mutableStateOf<com.patrykandpatrick.vico.core.entry.ChartEntryModel?>(null) }
+                
+                LaunchedEffect(modelProducer) {
+                    try {
+                        chartModel = modelProducer.getModel()
+                    } catch (e: Exception) {
+                        e.printStackTrace()
+                        chartModel = null
+                    }
+                }
+
                 if (chartModel != null) {
                     Chart(
                         chart = columnChart(),
-                        model = chartModel,
+                        model = chartModel!!,
                         modifier = Modifier.height(200.dp),
                         startAxis = rememberStartAxis(),
                         bottomAxis = rememberBottomAxis(valueFormatter = { value, _ ->
