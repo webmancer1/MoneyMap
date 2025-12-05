@@ -33,6 +33,7 @@ import com.example.moneymap.ui.screen.budget.BudgetScreen
 import com.example.moneymap.ui.screen.debt.DebtListScreen
 import com.example.moneymap.ui.screen.debt.AddEditDebtScreen
 import com.example.moneymap.ui.screen.insights.InsightsScreen
+import com.example.moneymap.ui.screen.savings.SavingsScreen
 import com.example.moneymap.ui.screen.settings.SettingsScreen
 
 @Composable
@@ -139,8 +140,8 @@ fun MoneyMapNavigation(
                     onNavigateToDebts = {
                         navController.navigate(NavRoutes.DEBTS)
                     },
-                    onNavigateToInsights = {
-                        navController.navigate(NavRoutes.INSIGHTS)
+                    onNavigateToSavings = {
+                        navController.navigate(NavRoutes.SAVINGS)
                     },
                     onNavigateToSettings = {
                         navController.navigate(NavRoutes.SETTINGS)
@@ -209,6 +210,11 @@ fun MoneyMapNavigation(
             }
             composable(NavRoutes.INSIGHTS) {
                 InsightsScreen(
+                    onNavigateBack = { navController.popBackStack() }
+                )
+            }
+            composable(NavRoutes.SAVINGS) {
+                SavingsScreen(
                     onNavigateBack = { navController.popBackStack() }
                 )
             }

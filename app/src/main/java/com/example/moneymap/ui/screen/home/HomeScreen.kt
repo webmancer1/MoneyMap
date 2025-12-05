@@ -27,7 +27,7 @@ fun HomeScreen(
     onNavigateToReports: () -> Unit,
     onNavigateToBudgets: () -> Unit,
     onNavigateToDebts: () -> Unit,
-    onNavigateToInsights: () -> Unit,
+    onNavigateToSavings: () -> Unit,
     onNavigateToSettings: () -> Unit,
     viewModel: HomeViewModel = hiltViewModel()
 ) {
@@ -182,7 +182,7 @@ fun HomeScreen(
                     Card(
                         modifier = Modifier
                             .weight(1f)
-                            .clickable(onClick = onNavigateToInsights),
+                            .clickable(onClick = onNavigateToSavings),
                         colors = CardDefaults.cardColors(
                             containerColor = MaterialTheme.colorScheme.surfaceVariant
                         )
@@ -192,12 +192,12 @@ fun HomeScreen(
                             horizontalAlignment = Alignment.CenterHorizontally
                         ) {
                             Icon(
-                                Icons.Default.Info,
+                                Icons.Default.Star,
                                 contentDescription = null,
                                 modifier = Modifier.padding(bottom = 8.dp)
                             )
                             Text(
-                                text = "Smart Insights",
+                                text = "Savings Tracker",
                                 style = MaterialTheme.typography.titleSmall,
                                 fontWeight = FontWeight.Bold
                             )
