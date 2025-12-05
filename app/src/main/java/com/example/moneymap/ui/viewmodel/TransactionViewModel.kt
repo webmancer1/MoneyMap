@@ -156,7 +156,7 @@ class TransactionViewModel @Inject constructor(
         _formState.update { it.copy(recurringPattern = pattern) }
     }
 
-    fun clearFormEvent() {
+    fun clearFormEvent() {s
         _formState.update { initialFormState }
     }
 
