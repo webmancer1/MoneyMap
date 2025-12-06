@@ -63,13 +63,39 @@ class TransactionViewModel @Inject constructor(
     private val currencyRepository: CurrencyRepository
 ) : ViewModel() {
 
-    val transactions = transactionRepository.getAllTransactions()
-        .map { list -> list.sortedByDescending { it.date } }
-        .stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5000),
-            initialValue = emptyList()
-        )
+    data class TransactionFilterState(
+        val dateRange: Pair<Long, Long>? = null,
+        val categoryId: String? = null,
+        val minAmount: Double? = null,
+        val maxAmount: Double? = null,
+        val paymentMethod: PaymentMethod? = null,
+        val transactionType: TransactionType? = null
+    )
+
+    private val _filterState = MutableStateFlow(TransactionFilterState())
+    val filterState: StateFlow<TransactionFilterState> = _filterState.asStateFlow()
+
+    val transactions = kotlinx.coroutines.flow.combine(
+        transactionRepository.getAllTransactions(),
+        _filterState
+    ) { list, filter ->
+        list.filter { transaction ->
+            val matchesType = filter.transactionType == null || transaction.type == filter.transactionType
+            val matchesCategory = filter.categoryId == null || transaction.categoryId == filter.categoryId
+            val matchesPaymentMethod = filter.paymentMethod == null || transaction.paymentMethod == filter.paymentMethod
+            
+            val matchesDate = filter.dateRange == null || (transaction.date >= filter.dateRange.first && transaction.date <= filter.dateRange.second)
+            
+            val matchesMinAmount = filter.minAmount == null || transaction.amount >= filter.minAmount
+            val matchesMaxAmount = filter.maxAmount == null || transaction.amount <= filter.maxAmount
+
+            matchesType && matchesCategory && matchesPaymentMethod && matchesDate && matchesMinAmount && matchesMaxAmount
+        }.sortedByDescending { it.date }
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = emptyList()
+    )
 
     val categories = categoryRepository.getAllCategories()
         .stateIn(
@@ -310,5 +336,29 @@ class TransactionViewModel @Inject constructor(
             TransactionType.EXPENSE -> CategoryType.EXPENSE
         }
         return allCategories.filter { it.type == categoryType }
+    }
+
+    fun updateFilter(
+        dateRange: Pair<Long, Long>? = _filterState.value.dateRange,
+        categoryId: String? = _filterState.value.categoryId,
+        minAmount: Double? = _filterState.value.minAmount,
+        maxAmount: Double? = _filterState.value.maxAmount,
+        paymentMethod: PaymentMethod? = _filterState.value.paymentMethod,
+        transactionType: TransactionType? = _filterState.value.transactionType
+    ) {
+        _filterState.update {
+            it.copy(
+                dateRange = dateRange,
+                categoryId = categoryId,
+                minAmount = minAmount,
+                maxAmount = maxAmount,
+                paymentMethod = paymentMethod,
+                transactionType = transactionType
+            )
+        }
+    }
+
+    fun clearFilters() {
+        _filterState.update { TransactionFilterState() }
     }
 }

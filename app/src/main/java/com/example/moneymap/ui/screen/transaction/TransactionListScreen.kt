@@ -8,6 +8,8 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
@@ -15,7 +17,16 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material3.AlertDialog
+import androidx.compose.material.icons.filled.List
+import androidx.compose.material.icons.filled.DateRange
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.platform.LocalContext
+import android.app.DatePickerDialog
+import android.widget.DatePicker
+import com.example.moneymap.data.model.PaymentMethod
+import java.util.Calendar
+import java.util.Date
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -71,7 +82,10 @@ fun TransactionListScreen(
     val snackbarHostState = remember { SnackbarHostState() }
     val coroutineScope = rememberCoroutineScope()
 
-    var selectedTypeFilter by remember { mutableStateOf<TransactionType?>(null) }
+    val filterState by viewModel.filterState.collectAsState()
+    var showFilterSheet by remember { mutableStateOf(false) }
+    
+    // We keep search local for now, but type filter moves to VM
     var searchQuery by remember { mutableStateOf("") }
     var showDeleteDialogFor by remember { mutableStateOf<Transaction?>(null) }
 
@@ -83,13 +97,11 @@ fun TransactionListScreen(
     }
     val dateFormat = remember { SimpleDateFormat("MMM dd, yyyy", Locale.getDefault()) }
 
-    val filteredTransactions = remember(transactions, selectedTypeFilter, searchQuery) {
+    val filteredTransactions = remember(transactions, searchQuery) {
         transactions.filter { transaction ->
-            val matchesType = selectedTypeFilter == null || transaction.type == selectedTypeFilter
-            val matchesSearch = searchQuery.isBlank() ||
+            searchQuery.isBlank() ||
                 transaction.notes?.contains(searchQuery, ignoreCase = true) == true ||
                 currencyFormat.format(transaction.amount).contains(searchQuery, ignoreCase = true)
-            matchesType && matchesSearch
         }
     }
 
@@ -130,6 +142,9 @@ fun TransactionListScreen(
                     }
                 },
                 actions = {
+                    IconButton(onClick = { showFilterSheet = true }) {
+                        Icon(Icons.Default.List, contentDescription = "Filter")
+                    }
                     IconButton(onClick = onNavigateToAddTransaction) {
                         Icon(Icons.Default.Add, contentDescription = "Add Transaction")
                     }
@@ -160,21 +175,23 @@ fun TransactionListScreen(
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 FilterChip(
-                    selected = selectedTypeFilter == null,
-                    onClick = { selectedTypeFilter = null },
+                    selected = filterState.transactionType == null,
+                    onClick = { viewModel.updateFilter(transactionType = null) },
                     label = { Text("All") }
                 )
                 FilterChip(
-                    selected = selectedTypeFilter == TransactionType.INCOME,
+                    selected = filterState.transactionType == TransactionType.INCOME,
                     onClick = {
-                        selectedTypeFilter = if (selectedTypeFilter == TransactionType.INCOME) null else TransactionType.INCOME
+                        val newType = if (filterState.transactionType == TransactionType.INCOME) null else TransactionType.INCOME
+                        viewModel.updateFilter(transactionType = newType)
                     },
                     label = { Text("Income") }
                 )
                 FilterChip(
-                    selected = selectedTypeFilter == TransactionType.EXPENSE,
+                    selected = filterState.transactionType == TransactionType.EXPENSE,
                     onClick = {
-                        selectedTypeFilter = if (selectedTypeFilter == TransactionType.EXPENSE) null else TransactionType.EXPENSE
+                        val newType = if (filterState.transactionType == TransactionType.EXPENSE) null else TransactionType.EXPENSE
+                        viewModel.updateFilter(transactionType = newType)
                     },
                     label = { Text("Expense") }
                 )
@@ -218,6 +235,14 @@ fun TransactionListScreen(
                 showDeleteDialogFor = null
                 coroutineScope.launch { viewModel.deleteTransaction(transaction) }
             }
+        )
+    }
+
+    if (showFilterSheet) {
+        FilterTransactionSheet(
+            onDismiss = { showFilterSheet = false },
+            viewModel = viewModel,
+            categories = categories
         )
     }
 }
@@ -390,5 +415,219 @@ private fun DeleteTransactionDialog(
             }
         }
     )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun FilterTransactionSheet(
+    onDismiss: () -> Unit,
+    viewModel: TransactionViewModel,
+    categories: List<Category>
+) {
+    val filterState by viewModel.filterState.collectAsState()
+    val sheetState = rememberModalBottomSheetState()
+    val context = LocalContext.current
+    
+    var minAmount by remember { mutableStateOf(filterState.minAmount?.toString() ?: "") }
+    var maxAmount by remember { mutableStateOf(filterState.maxAmount?.toString() ?: "") }
+    
+    val startDateCalendar = Calendar.getInstance()
+    val endDateCalendar = Calendar.getInstance()
+    
+    val startDatePickerDialog = DatePickerDialog(
+        context,
+        { _: DatePicker, year: Int, month: Int, dayOfMonth: Int ->
+            val start = Calendar.getInstance().apply { set(year, month, dayOfMonth) }.timeInMillis
+            val end = filterState.dateRange?.second ?: start
+            viewModel.updateFilter(dateRange = start to end)
+        },
+        startDateCalendar.get(Calendar.YEAR),
+        startDateCalendar.get(Calendar.MONTH),
+        startDateCalendar.get(Calendar.DAY_OF_MONTH)
+    )
+
+    val endDatePickerDialog = DatePickerDialog(
+        context,
+        { _: DatePicker, year: Int, month: Int, dayOfMonth: Int ->
+            val end = Calendar.getInstance().apply { set(year, month, dayOfMonth) }.timeInMillis
+            val start = filterState.dateRange?.first ?: end
+            viewModel.updateFilter(dateRange = start to end)
+        },
+        endDateCalendar.get(Calendar.YEAR),
+        endDateCalendar.get(Calendar.MONTH),
+        endDateCalendar.get(Calendar.DAY_OF_MONTH)
+    )
+
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        sheetState = sheetState
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            Text(
+                text = "Filter Transactions",
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold
+            )
+
+            // Date Range
+            Text("Date Range", style = MaterialTheme.typography.titleMedium)
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                OutlinedButton(
+                    onClick = { startDatePickerDialog.show() },
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Text(
+                        text = filterState.dateRange?.first?.let { 
+                            SimpleDateFormat("MMM dd, yyyy", Locale.getDefault()).format(Date(it)) 
+                        } ?: "Start Date"
+                    )
+                }
+                OutlinedButton(
+                    onClick = { endDatePickerDialog.show() },
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Text(
+                        text = filterState.dateRange?.second?.let { 
+                            SimpleDateFormat("MMM dd, yyyy", Locale.getDefault()).format(Date(it)) 
+                        } ?: "End Date"
+                    )
+                }
+            }
+
+            // Category
+            Text("Category", style = MaterialTheme.typography.titleMedium)
+            var expandedCategory by remember { mutableStateOf(false) }
+            ExposedDropdownMenuBox(
+                expanded = expandedCategory,
+                onExpandedChange = { expandedCategory = !expandedCategory }
+            ) {
+                OutlinedTextField(
+                    value = categories.find { it.id == filterState.categoryId }?.name ?: "All Categories",
+                    onValueChange = {},
+                    readOnly = true,
+                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedCategory) },
+                    modifier = Modifier.menuAnchor().fillMaxWidth()
+                )
+                ExposedDropdownMenu(
+                    expanded = expandedCategory,
+                    onDismissRequest = { expandedCategory = false }
+                ) {
+                    DropdownMenuItem(
+                        text = { Text("All Categories") },
+                        onClick = {
+                            viewModel.updateFilter(categoryId = null)
+                            expandedCategory = false
+                        }
+                    )
+                    categories.forEach { category ->
+                        DropdownMenuItem(
+                            text = { Text(category.name) },
+                            onClick = {
+                                viewModel.updateFilter(categoryId = category.id)
+                                expandedCategory = false
+                            }
+                        )
+                    }
+                }
+            }
+
+            // Amount Range
+            Text("Amount Range", style = MaterialTheme.typography.titleMedium)
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                OutlinedTextField(
+                    value = minAmount,
+                    onValueChange = { 
+                        minAmount = it
+                        viewModel.updateFilter(minAmount = it.toDoubleOrNull())
+                    },
+                    label = { Text("Min") },
+                    modifier = Modifier.weight(1f),
+                    singleLine = true
+                )
+                OutlinedTextField(
+                    value = maxAmount,
+                    onValueChange = { 
+                        maxAmount = it
+                        viewModel.updateFilter(maxAmount = it.toDoubleOrNull())
+                    },
+                    label = { Text("Max") },
+                    modifier = Modifier.weight(1f),
+                    singleLine = true
+                )
+            }
+
+            // Payment Method
+            Text("Payment Method", style = MaterialTheme.typography.titleMedium)
+            var expandedPayment by remember { mutableStateOf(false) }
+            ExposedDropdownMenuBox(
+                expanded = expandedPayment,
+                onExpandedChange = { expandedPayment = !expandedPayment }
+            ) {
+                OutlinedTextField(
+                    value = filterState.paymentMethod?.name?.replace("_", " ") ?: "All Methods",
+                    onValueChange = {},
+                    readOnly = true,
+                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedPayment) },
+                    modifier = Modifier.menuAnchor().fillMaxWidth()
+                )
+                ExposedDropdownMenu(
+                    expanded = expandedPayment,
+                    onDismissRequest = { expandedPayment = false }
+                ) {
+                    DropdownMenuItem(
+                        text = { Text("All Methods") },
+                        onClick = {
+                            viewModel.updateFilter(paymentMethod = null)
+                            expandedPayment = false
+                        }
+                    )
+                    PaymentMethod.values().forEach { method ->
+                        DropdownMenuItem(
+                            text = { Text(method.name.replace("_", " ")) },
+                            onClick = {
+                                viewModel.updateFilter(paymentMethod = method)
+                                expandedPayment = false
+                            }
+                        )
+                    }
+                }
+            }
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Button(
+                    onClick = {
+                        viewModel.clearFilters()
+                        minAmount = ""
+                        maxAmount = ""
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.errorContainer, contentColor = MaterialTheme.colorScheme.onErrorContainer),
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Text("Clear All")
+                }
+                Button(
+                    onClick = onDismiss,
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Text("Apply")
+                }
+            }
+            Spacer(modifier = Modifier.height(16.dp))
+        }
+    }
 }
 
