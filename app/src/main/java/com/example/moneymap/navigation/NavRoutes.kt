@@ -15,6 +15,8 @@ object NavRoutes {
     const val EDIT_DEBT = "edit_debt/{debtId}"
     const val INSIGHTS = "insights"
     const val SAVINGS = "savings"
+    const val ADD_SAVINGS = "add_savings"
+    const val EDIT_SAVINGS = "edit_savings/{goalId}"
     const val SETTINGS = "settings"
 }
 

@@ -33,6 +33,7 @@ import com.example.moneymap.ui.screen.budget.BudgetScreen
 import com.example.moneymap.ui.screen.debt.DebtListScreen
 import com.example.moneymap.ui.screen.debt.AddEditDebtScreen
 import com.example.moneymap.ui.screen.insights.InsightsScreen
+import com.example.moneymap.ui.screen.savings.AddEditSavingsScreen
 import com.example.moneymap.ui.screen.savings.SavingsScreen
 import com.example.moneymap.ui.screen.settings.SettingsScreen
 
@@ -215,7 +216,27 @@ fun MoneyMapNavigation(
             }
             composable(NavRoutes.SAVINGS) {
                 SavingsScreen(
-                    onNavigateBack = { navController.popBackStack() }
+                    onNavigateBack = { navController.popBackStack() },
+                    onNavigateToAddSavings = {
+                        navController.navigate(NavRoutes.ADD_SAVINGS)
+                    },
+                    onNavigateToEditSavings = { goalId ->
+                        navController.navigate("edit_savings/$goalId")
+                    }
+                )
+            }
+            composable(NavRoutes.ADD_SAVINGS) {
+                AddEditSavingsScreen(
+                    onNavigateBack = { navController.popBackStack() },
+                    onGoalSaved = { navController.popBackStack() }
+                )
+            }
+            composable("edit_savings/{goalId}") { backStackEntry ->
+                val goalId = backStackEntry.arguments?.getString("goalId")
+                AddEditSavingsScreen(
+                    onNavigateBack = { navController.popBackStack() },
+                    onGoalSaved = { navController.popBackStack() },
+                    goalId = goalId
                 )
             }
             composable(NavRoutes.SETTINGS) {
