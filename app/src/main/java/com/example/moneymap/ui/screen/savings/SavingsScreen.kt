@@ -16,9 +16,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.compose.runtime.remember
 import com.example.moneymap.data.model.Goal
 import com.example.moneymap.ui.viewmodel.SavingsViewModel
 import java.text.NumberFormat
+import java.text.SimpleDateFormat
+import java.util.Date
 import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -85,6 +88,25 @@ fun SavingsGoalItem(
     onClick: () -> Unit
 ) {
     val progress = if (goal.targetAmount > 0) (goal.savedAmount / goal.targetAmount).toFloat() else 0f
+    
+    val dateText = remember(goal.targetDate) {
+        goal.targetDate?.let { date ->
+            val dateFormat = SimpleDateFormat("MMM dd, yyyy", Locale.getDefault())
+            val formattedDate = dateFormat.format(Date(date))
+            
+            val diff = date - System.currentTimeMillis()
+            val daysLeft = java.util.concurrent.TimeUnit.MILLISECONDS.toDays(diff)
+            
+            val timeLeft = when {
+                daysLeft < 0 -> "Overdue"
+                daysLeft == 0L -> "Due today"
+                daysLeft < 30 -> "$daysLeft days left"
+                daysLeft < 365 -> "${daysLeft / 30} months left"
+                else -> "${daysLeft / 365} years left"
+            }
+            "$formattedDate • $timeLeft"
+        }
+    }
 
     Card(
         modifier = Modifier
@@ -101,11 +123,20 @@ fun SavingsGoalItem(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Text(
-                    text = goal.name,
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold
-                )
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = goal.name,
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold
+                    )
+                    if (dateText != null) {
+                        Text(
+                            text = dateText,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
                 Text(
                     text = "${currencyFormat.format(goal.savedAmount)} / ${currencyFormat.format(goal.targetAmount)}",
                     style = MaterialTheme.typography.bodyMedium
