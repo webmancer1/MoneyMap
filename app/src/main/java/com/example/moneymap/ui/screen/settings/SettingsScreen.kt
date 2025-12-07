@@ -103,8 +103,7 @@ fun SettingsScreen(
             ProfileSection(
                 displayName = authUiState.user?.displayName ?: "Anonymous",
                 email = authUiState.user?.email ?: "Not available",
-                onManageAccount = onNavigateToManageAccount,
-                onChangePassword = { settingsViewModel.triggerPlaceholderMessage("Change password coming soon") }
+                onManageAccount = onNavigateToManageAccount
             )
 
             AppearanceSection(
@@ -157,8 +156,7 @@ fun SettingsScreen(
 private fun ProfileSection(
     displayName: String,
     email: String,
-    onManageAccount: () -> Unit,
-    onChangePassword: () -> Unit
+    onManageAccount: () -> Unit
 ) {
     SettingsCard(title = "Profile") {
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -178,13 +176,8 @@ private fun ProfileSection(
             }
         }
         Spacer(modifier = Modifier.height(12.dp))
-        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            FilledTonalButton(onClick = onManageAccount, modifier = Modifier.weight(1f)) {
-                Text("Manage Account")
-            }
-            OutlinedButton(onClick = onChangePassword, modifier = Modifier.weight(1f)) {
-                Text("Change Password")
-            }
+        FilledTonalButton(onClick = onManageAccount, modifier = Modifier.fillMaxWidth()) {
+            Text("Manage Account")
         }
     }
 }

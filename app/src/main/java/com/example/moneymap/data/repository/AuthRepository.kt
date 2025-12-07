@@ -85,5 +85,14 @@ class AuthRepository @Inject constructor(
             Result.failure(e)
         }
     }
+
+    suspend fun updatePassword(password: String): Result<Unit> {
+        return try {
+            currentUser?.updatePassword(password)?.await()
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
 }
 

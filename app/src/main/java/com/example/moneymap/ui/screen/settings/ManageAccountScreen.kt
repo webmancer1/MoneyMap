@@ -120,6 +120,14 @@ fun ManageAccountScreen(
                 Text("Save Changes")
             }
 
+            Button(
+                onClick = { showPasswordDialog = true },
+                modifier = Modifier.fillMaxWidth(),
+                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary)
+            ) {
+                Text("Change Password")
+            }
+
             Spacer(modifier = Modifier.weight(1f))
 
             Button(
@@ -130,5 +138,38 @@ fun ManageAccountScreen(
                 Text("Delete Account")
             }
         }
+    }
+
+    if (showPasswordDialog) {
+        var newPassword by remember { mutableStateOf("") }
+        AlertDialog(
+            onDismissRequest = { showPasswordDialog = false },
+            title = { Text("Change Password") },
+            text = {
+                OutlinedTextField(
+                    value = newPassword,
+                    onValueChange = { newPassword = it },
+                    label = { Text("New Password") },
+                    singleLine = true,
+                    visualTransformation = androidx.compose.ui.text.input.PasswordVisualTransformation()
+                )
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        authViewModel.updatePassword(newPassword)
+                        showPasswordDialog = false
+                    },
+                    enabled = newPassword.length >= 6
+                ) {
+                    Text("Update")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showPasswordDialog = false }) {
+                    Text("Cancel")
+                }
+            }
+        )
     }
 }

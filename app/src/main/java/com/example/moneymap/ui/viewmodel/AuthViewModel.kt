@@ -168,5 +168,23 @@ class AuthViewModel @Inject constructor(
             }
         }
     }
+
+    fun updatePassword(password: String) {
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null)
+            val result = authRepository.updatePassword(password)
+            result.onSuccess {
+                _uiState.value = _uiState.value.copy(
+                    isLoading = false,
+                    errorMessage = "Password updated successfully" // Using errorMessage for success msg for now, or consider adding a successMessage field
+                )
+            }.onFailure { exception ->
+                _uiState.value = _uiState.value.copy(
+                    isLoading = false,
+                    errorMessage = exception.message ?: "Failed to update password"
+                )
+            }
+        }
+    }
 }
 
