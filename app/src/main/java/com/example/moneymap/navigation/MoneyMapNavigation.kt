@@ -246,6 +246,19 @@ fun MoneyMapNavigation(
                         navController.navigate(NavRoutes.LOGIN) {
                             popUpTo(0) { inclusive = true }
                         }
+                    },
+                    onNavigateToManageAccount = {
+                        navController.navigate(NavRoutes.MANAGE_ACCOUNT)
+                    }
+                )
+            }
+            composable(NavRoutes.MANAGE_ACCOUNT) {
+                com.example.moneymap.ui.screen.settings.ManageAccountScreen(
+                    onNavigateBack = { navController.popBackStack() },
+                    onAccountDeleted = {
+                        navController.navigate(NavRoutes.LOGIN) {
+                            popUpTo(0) { inclusive = true }
+                        }
                     }
                 )
             }

@@ -136,5 +136,37 @@ class AuthViewModel @Inject constructor(
             }
         }
     }
+
+    fun updateProfile(displayName: String) {
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null)
+            val result = authRepository.updateProfile(displayName)
+            result.onSuccess {
+                // Refresh user data
+                checkAuthState()
+                _uiState.value = _uiState.value.copy(isLoading = false)
+            }.onFailure { exception ->
+                _uiState.value = _uiState.value.copy(
+                    isLoading = false,
+                    errorMessage = exception.message ?: "Failed to update profile"
+                )
+            }
+        }
+    }
+
+    fun deleteAccount() {
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null)
+            val result = authRepository.deleteAccount()
+            result.onSuccess {
+                _uiState.value = AuthUiState() // Reset state
+            }.onFailure { exception ->
+                _uiState.value = _uiState.value.copy(
+                    isLoading = false,
+                    errorMessage = exception.message ?: "Failed to delete account"
+                )
+            }
+        }
+    }
 }
 

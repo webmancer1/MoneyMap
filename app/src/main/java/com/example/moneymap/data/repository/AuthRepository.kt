@@ -73,5 +73,17 @@ class AuthRepository @Inject constructor(
             Result.failure(e)
         }
     }
+
+    suspend fun updateProfile(displayName: String): Result<Unit> {
+        return try {
+            val profileUpdates = com.google.firebase.auth.UserProfileChangeRequest.Builder()
+                .setDisplayName(displayName)
+                .build()
+            currentUser?.updateProfile(profileUpdates)?.await()
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
 }
 

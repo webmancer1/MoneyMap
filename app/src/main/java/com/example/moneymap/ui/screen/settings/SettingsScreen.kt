@@ -57,6 +57,7 @@ import kotlinx.coroutines.launch
 fun SettingsScreen(
     onNavigateBack: () -> Unit,
     onSignOut: () -> Unit,
+    onNavigateToManageAccount: () -> Unit,
     authViewModel: AuthViewModel = hiltViewModel(),
     settingsViewModel: SettingsViewModel = hiltViewModel()
 ) {
@@ -102,7 +103,7 @@ fun SettingsScreen(
             ProfileSection(
                 displayName = authUiState.user?.displayName ?: "Anonymous",
                 email = authUiState.user?.email ?: "Not available",
-                onManageAccount = { settingsViewModel.triggerPlaceholderMessage("Manage account coming soon") },
+                onManageAccount = onNavigateToManageAccount,
                 onChangePassword = { settingsViewModel.triggerPlaceholderMessage("Change password coming soon") }
             )
 
