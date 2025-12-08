@@ -17,12 +17,12 @@ A comprehensive personal finance management mobile application built with Kotlin
 -  Budget Planning and Alerts
 -  Debt Tracker
 -  Recurring Transactions
+-  Savings Goals
+-  Category Management  
 
 ### Planned Features
 -  Analytics with Charts
--  Category Management
 -  Biometric Authentication
--  Savings Goals
 -  Export Functionality (CSV, Excel, PDF)
 -  Receipt Upload
 
