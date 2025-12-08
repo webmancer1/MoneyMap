@@ -108,6 +108,7 @@ fun AddTransactionScreen(
     var isCategoryMenuExpanded by remember { mutableStateOf(false) }
     var isPaymentMenuExpanded by remember { mutableStateOf(false) }
     var showDatePicker by remember { mutableStateOf(false) }
+    var showAddCategoryDialog by remember { mutableStateOf(false) }
     val datePickerState = rememberDatePickerState(initialSelectedDateMillis = formState.date)
 
     val categoriesForType = remember(formState.type, allCategories) {
@@ -136,6 +137,17 @@ fun AddTransactionScreen(
         ) {
             DatePicker(state = datePickerState)
         }
+    }
+
+    if (showAddCategoryDialog) {
+        com.example.moneymap.ui.screen.settings.AddCategoryDialog(
+            type = if (formState.type == TransactionType.EXPENSE) com.example.moneymap.data.model.CategoryType.EXPENSE else com.example.moneymap.data.model.CategoryType.INCOME,
+            onDismiss = { showAddCategoryDialog = false },
+            onSave = { name, color ->
+                viewModel.addNewCategory(name, if (formState.type == TransactionType.EXPENSE) com.example.moneymap.data.model.CategoryType.EXPENSE else com.example.moneymap.data.model.CategoryType.INCOME, color)
+                showAddCategoryDialog = false
+            }
+        )
     }
 
     Scaffold(
@@ -241,6 +253,14 @@ fun AddTransactionScreen(
                             )
                         }
                     }
+                    Divider()
+                    DropdownMenuItem(
+                        text = { Text("Add new...", color = MaterialTheme.colorScheme.primary) },
+                        onClick = {
+                            isCategoryMenuExpanded = false
+                            showAddCategoryDialog = true
+                        }
+                    )
                 }
             }
 

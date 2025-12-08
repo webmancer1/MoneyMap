@@ -19,5 +19,6 @@ object NavRoutes {
     const val EDIT_SAVINGS = "edit_savings/{goalId}"
     const val SETTINGS = "settings"
     const val MANAGE_ACCOUNT = "manage_account"
+    const val MANAGE_CATEGORIES = "manage_categories"
 }
 

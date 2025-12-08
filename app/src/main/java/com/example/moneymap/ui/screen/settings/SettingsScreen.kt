@@ -58,6 +58,7 @@ fun SettingsScreen(
     onNavigateBack: () -> Unit,
     onSignOut: () -> Unit,
     onNavigateToManageAccount: () -> Unit,
+    onNavigateToManageCategories: () -> Unit,
     authViewModel: AuthViewModel = hiltViewModel(),
     settingsViewModel: SettingsViewModel = hiltViewModel()
 ) {
@@ -116,7 +117,8 @@ fun SettingsScreen(
             PreferencesSection(
                 selectedCurrency = settingsUiState.preferences.currency,
                 currencyOptions = currencyOptions,
-                onCurrencySelected = settingsViewModel::updateCurrency
+                onCurrencySelected = settingsViewModel::updateCurrency,
+                onNavigateToManageCategories = onNavigateToManageCategories
             )
 
             NotificationsSection(
@@ -210,7 +212,8 @@ private fun AppearanceSection(
 private fun PreferencesSection(
     selectedCurrency: String,
     currencyOptions: List<String>,
-    onCurrencySelected: (String) -> Unit
+    onCurrencySelected: (String) -> Unit,
+    onNavigateToManageCategories: () -> Unit
 ) {
     SettingsCard(title = "Preferences") {
         Text(text = "Currency", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)

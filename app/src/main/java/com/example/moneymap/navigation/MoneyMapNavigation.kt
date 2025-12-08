@@ -249,6 +249,9 @@ fun MoneyMapNavigation(
                     },
                     onNavigateToManageAccount = {
                         navController.navigate(NavRoutes.MANAGE_ACCOUNT)
+                    },
+                    onNavigateToManageCategories = {
+                        navController.navigate(NavRoutes.MANAGE_CATEGORIES)
                     }
                 )
             }
@@ -260,6 +263,11 @@ fun MoneyMapNavigation(
                             popUpTo(0) { inclusive = true }
                         }
                     }
+                )
+            }
+            composable(NavRoutes.MANAGE_CATEGORIES) {
+                com.example.moneymap.ui.screen.settings.ManageCategoriesScreen(
+                    onNavigateBack = { navController.popBackStack() }
                 )
             }
         }

@@ -361,4 +361,25 @@ class TransactionViewModel @Inject constructor(
     fun clearFilters() {
         _filterState.update { TransactionFilterState() }
     }
+
+    fun addNewCategory(name: String, type: CategoryType, color: String) {
+        viewModelScope.launch {
+            try {
+                val newCategory = Category(
+                    id = UUID.randomUUID().toString(),
+                    name = name,
+                    type = type,
+                    color = color,
+                    icon = "Category",
+                    isDefault = false,
+                    isActive = true
+                )
+                categoryRepository.insertCategory(newCategory)
+                _formState.update { it.copy(categoryId = newCategory.id) } // Auto-select new category
+                _snackbarMessage.emit("Category added")
+            } catch (e: Exception) {
+                _snackbarMessage.emit("Failed to add category: ${e.message}")
+            }
+        }
+    }
 }
