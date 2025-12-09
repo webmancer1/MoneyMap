@@ -4,7 +4,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.List
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
@@ -51,11 +51,6 @@ fun MoneyMapNavigation(
             icon = Icons.Default.Home
         ),
         BottomNavItem(
-            route = NavRoutes.TRANSACTIONS,
-            label = "Transactions",
-            icon = Icons.Default.List
-        ),
-        BottomNavItem(
             route = NavRoutes.REPORTS,
             label = "Reports",
             icon = Icons.Default.Info
@@ -64,6 +59,11 @@ fun MoneyMapNavigation(
             route = NavRoutes.BUDGETS,
             label = "Budgets",
             icon = Icons.Default.AccountCircle
+        ),
+        BottomNavItem(
+            route = NavRoutes.SETTINGS,
+            label = "Settings",
+            icon = Icons.Default.Settings
         )
     )
     val showBottomBar = currentDestination.isBottomBarDestination(bottomNavItems)
@@ -277,7 +277,7 @@ fun MoneyMapNavigation(
 private fun NavDestination?.isBottomBarDestination(items: List<BottomNavItem>): Boolean {
     return this?.hierarchy?.any { destination ->
         items.any { it.route == destination.route }
-    } == true && this?.route != NavRoutes.SETTINGS
+    } == true
 }
 
 @Composable
