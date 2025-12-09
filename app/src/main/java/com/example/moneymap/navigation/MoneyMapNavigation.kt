@@ -13,6 +13,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.navigation.NavDestination
@@ -23,6 +24,8 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import com.example.moneymap.ui.screen.auth.BiometricLockScreen
+import com.example.moneymap.ui.viewmodel.SettingsViewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.moneymap.ui.screen.auth.LoginScreen
 import com.example.moneymap.ui.screen.auth.RegisterScreen
 import com.example.moneymap.ui.screen.home.HomeScreen
@@ -125,6 +128,9 @@ fun MoneyMapNavigation(
                 )
             }
             composable(NavRoutes.HOME) {
+                val settingsViewModel: SettingsViewModel = hiltViewModel()
+                val settingsState by settingsViewModel.uiState.collectAsState()
+
                 HomeScreen(
                     onNavigateToTransactions = {
                         navController.navigate(NavRoutes.TRANSACTIONS)
@@ -146,6 +152,10 @@ fun MoneyMapNavigation(
                     },
                     onNavigateToSettings = {
                         navController.navigate(NavRoutes.SETTINGS)
+                    },
+                    isDarkTheme = settingsState.preferences.darkTheme,
+                    onToggleTheme = {
+                        settingsViewModel.toggleDarkTheme(it)
                     }
                 )
             }

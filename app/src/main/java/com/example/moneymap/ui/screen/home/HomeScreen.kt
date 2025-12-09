@@ -4,6 +4,11 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.AccountCircle
+import androidx.compose.material.icons.filled.WbSunny
+import androidx.compose.material.icons.filled.NightlightRound
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -18,6 +23,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.moneymap.ui.viewmodel.HomeViewModel
 import java.text.NumberFormat
 import java.util.*
+import androidx.compose.foundation.isSystemInDarkTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -29,7 +35,9 @@ fun HomeScreen(
     onNavigateToDebts: () -> Unit,
     onNavigateToSavings: () -> Unit,
     onNavigateToSettings: () -> Unit,
-    viewModel: HomeViewModel = hiltViewModel()
+    viewModel: HomeViewModel = hiltViewModel(),
+    isDarkTheme: Boolean = isSystemInDarkTheme(),
+    onToggleTheme: (Boolean) -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val recentTransactions by viewModel.recentTransactions.collectAsState()
@@ -44,8 +52,11 @@ fun HomeScreen(
             TopAppBar(
                 title = { Text("MoneyMap") },
                 actions = {
-                    IconButton(onClick = onNavigateToSettings) {
-                        Icon(Icons.Default.Settings, contentDescription = "Settings")
+                    IconButton(onClick = { onToggleTheme(!isDarkTheme) }) {
+                        Icon(
+                            imageVector = if (isDarkTheme) Icons.Default.WbSunny else Icons.Default.NightlightRound,
+                            contentDescription = if (isDarkTheme) "Switch to Light Mode" else "Switch to Dark Mode"
+                        )
                     }
                 }
             )
