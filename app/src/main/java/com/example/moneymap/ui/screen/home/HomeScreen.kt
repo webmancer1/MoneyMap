@@ -50,7 +50,15 @@ fun HomeScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("MoneyMap") },
+                title = { 
+                    Column {
+                        Text(
+                            text = "${uiState.greeting}, ${uiState.userName} 👋",
+                            style = MaterialTheme.typography.headlineSmall,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                },
                 actions = {
                     IconButton(onClick = { onToggleTheme(!isDarkTheme) }) {
                         Icon(
