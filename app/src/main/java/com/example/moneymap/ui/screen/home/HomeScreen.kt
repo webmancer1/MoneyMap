@@ -54,7 +54,7 @@ fun HomeScreen(
                     Column {
                         Text(
                             text = "${uiState.greeting}, ${uiState.userName} 👋",
-                            style = MaterialTheme.typography.titleLarge,
+                            style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold
                         )
                     }
