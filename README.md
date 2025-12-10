@@ -13,7 +13,6 @@ A comprehensive personal finance management mobile application built with Kotlin
 -  Material Design 3 UI
 -  Room Database for local storage
 -  MVVM Architecture with Hilt Dependency Injection
--  Firebase Firestore Sync
 -  Budget Planning and Alerts
 -  Debt Tracker
 -  Recurring Transactions
