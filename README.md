@@ -25,6 +25,7 @@ A comprehensive personal finance management mobile application built with Kotlin
 -  Biometric Authentication
 -  Export Functionality (CSV, Excel, PDF)
 -  Receipt Upload
+-  Firebase Firestore Sync
 
 ## Technical Stack
 
