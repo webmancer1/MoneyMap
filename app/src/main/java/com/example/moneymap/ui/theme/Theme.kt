@@ -14,6 +14,8 @@ import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
+import android.graphics.drawable.ColorDrawable
+import androidx.compose.ui.graphics.Color
 
 private val DarkColorScheme = darkColorScheme(
     primary = PrimaryGreen80,
@@ -92,8 +94,14 @@ fun MoneyMapTheme(
     if (!view.isInEditMode) {
         SideEffect {
             val window = (view.context as? Activity)?.window ?: return@SideEffect
-            // window.statusBarColor is removed to allow edge-to-edge transparent status bar to work correctly
-            // window.statusBarColor = colorScheme.surface.toArgb()
+            
+            // Sync window background with theme background to prevent lag during transition
+            window.setBackgroundDrawable(ColorDrawable(colorScheme.background.toArgb()))
+            
+            // Force transparent system bars to work with Edge-to-Edge
+            window.statusBarColor = Color.Transparent.toArgb()
+            window.navigationBarColor = Color.Transparent.toArgb()
+            
             WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = !darkTheme
         }
     }
