@@ -16,6 +16,8 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.flowOn
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
@@ -104,7 +106,9 @@ class ReportsViewModel @Inject constructor(
                     period = period,
                     displayCurrency = settings.currency
                 )
-            }.collect { state ->
+            }
+            .flowOn(Dispatchers.Default)
+            .collect { state ->
                 _uiState.value = state
             }
         }

@@ -25,6 +25,8 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.flowOn
 import java.text.SimpleDateFormat
 import java.util.Locale
 import java.util.UUID
@@ -91,7 +93,9 @@ class TransactionViewModel @Inject constructor(
 
             matchesType && matchesCategory && matchesPaymentMethod && matchesDate && matchesMinAmount && matchesMaxAmount
         }.sortedByDescending { it.date }
-    }.stateIn(
+    }
+    .flowOn(Dispatchers.Default)
+    .stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
         initialValue = emptyList()

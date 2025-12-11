@@ -10,6 +10,10 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.Dispatchers
 import java.util.Calendar
 import javax.inject.Inject
 
@@ -57,9 +61,46 @@ class InsightsViewModel @Inject constructor(
             initialValue = emptyList()
         )
 
-    fun getInsights(): List<InsightSpendingInsight> {
-        val allTransactions = transactions.value
-        val allCategories = categories.value
+    val insights: StateFlow<List<InsightSpendingInsight>> = combine(
+        transactions,
+        categories
+    ) { allTransactions, allCategories ->
+        computeInsights(allTransactions, allCategories)
+    }
+    .flowOn(Dispatchers.Default)
+    .stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = emptyList()
+    )
+
+    val topSpendingCategories: StateFlow<List<InsightCategorySpending>> = combine(
+        transactions,
+        categories
+    ) { allTransactions, allCategories ->
+        computeTopSpendingCategories(allTransactions, allCategories)
+    }
+    .flowOn(Dispatchers.Default)
+    .stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = emptyList()
+    )
+
+    val monthlyOverview: StateFlow<Pair<Double, Double>> = transactions.map { allTransactions ->
+        computeMonthlyOverview(allTransactions)
+    }
+    .flowOn(Dispatchers.Default)
+    .stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = 0.0 to 0.0
+    )
+
+    private fun computeInsights(
+        allTransactions: List<Transaction>,
+        allCategories: List<com.example.moneymap.data.model.Category>
+    ): List<InsightSpendingInsight> {
         val insights = mutableListOf<InsightSpendingInsight>()
 
         if (allTransactions.isEmpty()) {
@@ -106,9 +147,12 @@ class InsightsViewModel @Inject constructor(
         return insights
     }
 
-    fun getTopSpendingCategories(limit: Int = 5): List<InsightCategorySpending> {
-        val expenseTransactions = transactions.value.filter { it.type == TransactionType.EXPENSE }
-        val allCategories = categories.value
+    private fun computeTopSpendingCategories(
+        allTransactions: List<Transaction>,
+        allCategories: List<com.example.moneymap.data.model.Category>,
+        limit: Int = 5
+    ): List<InsightCategorySpending> {
+        val expenseTransactions = allTransactions.filter { it.type == TransactionType.EXPENSE }
         val totalExpenses = expenseTransactions.sumOf { it.amount }
 
         if (totalExpenses == 0.0) return emptyList()
@@ -326,7 +370,7 @@ class InsightsViewModel @Inject constructor(
         return insights
     }
 
-    fun getMonthlyExpenseTotal(): Double {
+    private fun computeMonthlyOverview(allTransactions: List<Transaction>): Pair<Double, Double> {
         val calendar = Calendar.getInstance()
         calendar.set(Calendar.DAY_OF_MONTH, 1)
         calendar.set(Calendar.HOUR_OF_DAY, 0)
@@ -334,22 +378,15 @@ class InsightsViewModel @Inject constructor(
         calendar.set(Calendar.SECOND, 0)
         val monthStart = calendar.timeInMillis
 
-        return transactions.value
-            .filter { it.type == TransactionType.EXPENSE && it.date >= monthStart }
+        val currentMonthTransactions = allTransactions.filter { it.date >= monthStart }
+        val expenses = currentMonthTransactions
+            .filter { it.type == TransactionType.EXPENSE }
             .sumOf { it.amount }
-    }
-
-    fun getMonthlyIncomeTotal(): Double {
-        val calendar = Calendar.getInstance()
-        calendar.set(Calendar.DAY_OF_MONTH, 1)
-        calendar.set(Calendar.HOUR_OF_DAY, 0)
-        calendar.set(Calendar.MINUTE, 0)
-        calendar.set(Calendar.SECOND, 0)
-        val monthStart = calendar.timeInMillis
-
-        return transactions.value
-            .filter { it.type == TransactionType.INCOME && it.date >= monthStart }
+        val income = currentMonthTransactions
+            .filter { it.type == TransactionType.INCOME }
             .sumOf { it.amount }
+
+        return expenses to income
     }
 }
 

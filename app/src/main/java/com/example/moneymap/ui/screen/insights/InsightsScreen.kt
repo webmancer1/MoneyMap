@@ -50,10 +50,10 @@ fun InsightsScreen(
 ) {
     val transactions by viewModel.transactions.collectAsState()
     val categories by viewModel.categories.collectAsState()
-    val insights = viewModel.getInsights()
-    val topCategories = viewModel.getTopSpendingCategories()
-    val monthlyExpenses = viewModel.getMonthlyExpenseTotal()
-    val monthlyIncome = viewModel.getMonthlyIncomeTotal()
+    val insights by viewModel.insights.collectAsState()
+    val topCategories by viewModel.topSpendingCategories.collectAsState()
+    val monthlyOverview by viewModel.monthlyOverview.collectAsState()
+    val (monthlyExpenses, monthlyIncome) = monthlyOverview
     val currencyFormat = NumberFormat.getCurrencyInstance(Locale.getDefault())
 
     Scaffold(
