@@ -12,6 +12,7 @@ import com.example.moneymap.data.sync.SyncManager
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.Dispatchers
 import java.util.Calendar
 import javax.inject.Inject
 
@@ -89,8 +90,8 @@ class HomeViewModel @Inject constructor(
     private fun observeMonthlySummary() {
         val (startDate, endDate) = currentMonthRange()
         transactionRepository.getTransactionsByDateRange(startDate, endDate)
-            .combine(settingsRepository.settingsFlow) { transactions, settings ->
-                Pair(transactions, settings.currency)
+            .combine(settingsRepository.settingsFlow.map { it.currency }.distinctUntilChanged()) { transactions, currency ->
+                Pair(transactions, currency)
             }
             .onStart { _uiState.value = _uiState.value.copy(isLoading = true) }
             .onEach { (transactions, displayCurrency) ->
@@ -113,6 +114,7 @@ class HomeViewModel @Inject constructor(
                     isLoading = false
                 )
             }
+            .flowOn(Dispatchers.Default)
             .launchIn(viewModelScope)
     }
 
