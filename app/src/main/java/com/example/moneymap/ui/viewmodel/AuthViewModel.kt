@@ -40,6 +40,15 @@ class AuthViewModel @Inject constructor(
     }
 
     fun signIn(email: String, password: String) {
+        if (!isValidEmail(email)) {
+            _uiState.value = _uiState.value.copy(errorMessage = "Please enter a valid email address")
+            return
+        }
+        if (password.isBlank()) {
+             _uiState.value = _uiState.value.copy(errorMessage = "Please enter your password")
+            return
+        }
+
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null)
             val result = authRepository.signInWithEmailAndPassword(email, password)
@@ -63,6 +72,15 @@ class AuthViewModel @Inject constructor(
     }
 
     fun signUp(email: String, password: String) {
+        if (!isValidEmail(email)) {
+            _uiState.value = _uiState.value.copy(errorMessage = "Please enter a valid email address")
+            return
+        }
+        if (!isValidPassword(password)) {
+            _uiState.value = _uiState.value.copy(errorMessage = "Password must be at least 8 characters, contain an uppercase letter and a number")
+            return
+        }
+
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null)
             val result = authRepository.signUpWithEmailAndPassword(email, password)
@@ -185,6 +203,18 @@ class AuthViewModel @Inject constructor(
                 )
             }
         }
+    }
+
+    private fun isValidEmail(email: String): Boolean {
+        val emailRegex = "^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\$".toRegex()
+        return email.matches(emailRegex)
+    }
+
+    private fun isValidPassword(password: String): Boolean {
+        if (password.length < 8) return false
+        val hasUpperCase = password.any { it.isUpperCase() }
+        val hasNumber = password.any { it.isDigit() }
+        return hasUpperCase && hasNumber
     }
 }
 
