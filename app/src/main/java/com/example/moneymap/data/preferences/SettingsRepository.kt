@@ -22,14 +22,12 @@ import javax.inject.Singleton
 private const val SETTINGS_DATASTORE_NAME = "user_settings"
 
 private val DARK_THEME_KEY = booleanPreferencesKey("dark_theme")
-private val DYNAMIC_COLOR_KEY = booleanPreferencesKey("dynamic_color")
 private val CURRENCY_KEY = stringPreferencesKey("currency")
 private val NOTIFICATIONS_KEY = booleanPreferencesKey("notifications_enabled")
 private val BIOMETRIC_KEY = booleanPreferencesKey("biometric_lock")
 
 data class SettingsPreferences(
     val darkTheme: Boolean = false,
-    val dynamicColor: Boolean = true,
     val currency: String = "KES",
     val notificationsEnabled: Boolean = true,
     val biometricLockEnabled: Boolean = false
@@ -57,7 +55,6 @@ class SettingsRepository @Inject constructor(
         .map { preferences ->
             SettingsPreferences(
                 darkTheme = preferences[DARK_THEME_KEY] ?: false,
-                dynamicColor = preferences[DYNAMIC_COLOR_KEY] ?: true,
                 currency = preferences[CURRENCY_KEY] ?: "KES",
                 notificationsEnabled = preferences[NOTIFICATIONS_KEY] ?: true,
                 biometricLockEnabled = preferences[BIOMETRIC_KEY] ?: false
@@ -67,12 +64,6 @@ class SettingsRepository @Inject constructor(
     suspend fun updateDarkTheme(enabled: Boolean) {
         dataStore.edit { preferences ->
             preferences[DARK_THEME_KEY] = enabled
-        }
-    }
-
-    suspend fun updateDynamicColor(enabled: Boolean) {
-        dataStore.edit { preferences ->
-            preferences[DYNAMIC_COLOR_KEY] = enabled
         }
     }
 

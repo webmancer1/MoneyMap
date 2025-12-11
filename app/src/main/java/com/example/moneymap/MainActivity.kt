@@ -39,8 +39,7 @@ class MainActivity : ComponentActivity() {
             val settingsState by settingsViewModel.uiState.collectAsState()
 
             MoneyMapTheme(
-                darkTheme = settingsState.preferences.darkTheme,
-                dynamicColor = settingsState.preferences.dynamicColor
+                darkTheme = settingsState.preferences.darkTheme
             ) {
                 val navController = rememberNavController()
 

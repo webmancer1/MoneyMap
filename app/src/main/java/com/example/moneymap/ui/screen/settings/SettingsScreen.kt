@@ -109,9 +109,7 @@ fun SettingsScreen(
 
             AppearanceSection(
                 darkThemeEnabled = settingsUiState.preferences.darkTheme,
-                dynamicColorEnabled = settingsUiState.preferences.dynamicColor,
-                onDarkThemeToggle = settingsViewModel::toggleDarkTheme,
-                onDynamicColorToggle = settingsViewModel::toggleDynamicColor
+                onDarkThemeToggle = settingsViewModel::toggleDarkTheme
             )
 
             PreferencesSection(
@@ -187,9 +185,7 @@ private fun ProfileSection(
 @Composable
 private fun AppearanceSection(
     darkThemeEnabled: Boolean,
-    dynamicColorEnabled: Boolean,
-    onDarkThemeToggle: (Boolean) -> Unit,
-    onDynamicColorToggle: (Boolean) -> Unit
+    onDarkThemeToggle: (Boolean) -> Unit
 ) {
     SettingsCard(title = "Appearance") {
         SettingsToggleRow(
@@ -197,13 +193,6 @@ private fun AppearanceSection(
             description = "Enable dark mode for the app",
             checked = darkThemeEnabled,
             onCheckedChange = onDarkThemeToggle
-        )
-        Divider(modifier = Modifier.padding(vertical = 12.dp))
-        SettingsToggleRow(
-            title = "Dynamic color",
-            description = "Match system wallpaper colors (Android 12+)",
-            checked = dynamicColorEnabled,
-            onCheckedChange = onDynamicColorToggle
         )
     }
 }

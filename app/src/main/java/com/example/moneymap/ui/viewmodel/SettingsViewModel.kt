@@ -50,11 +50,7 @@ class SettingsViewModel @Inject constructor(
         }
     }
 
-    fun toggleDynamicColor(enabled: Boolean) {
-        viewModelScope.launch {
-            settingsRepository.updateDynamicColor(enabled)
-        }
-    }
+
 
     fun updateCurrency(currency: String) {
         viewModelScope.launch {
