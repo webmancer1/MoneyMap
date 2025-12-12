@@ -31,6 +31,7 @@ import java.text.SimpleDateFormat
 import java.util.Locale
 import java.util.UUID
 import javax.inject.Inject
+import com.example.moneymap.notification.LocalNotificationService
 
 private val initialFormState = TransactionFormState()
 
@@ -62,7 +63,8 @@ class TransactionViewModel @Inject constructor(
     private val transactionRepository: TransactionRepository,
     private val categoryRepository: CategoryRepository,
     private val settingsRepository: SettingsRepository,
-    private val currencyRepository: CurrencyRepository
+    private val currencyRepository: CurrencyRepository,
+    private val localNotificationService: LocalNotificationService
 ) : ViewModel() {
 
     data class TransactionFilterState(
@@ -242,6 +244,10 @@ class TransactionViewModel @Inject constructor(
                         }
                         _formState.update { it.copy(isSaving = false, isSuccess = true) }
                         _snackbarMessage.emit("Transaction saved successfully")
+                        localNotificationService.showTransactionNotification(
+                            "Transaction Added",
+                            "Your ${currentState.type.name.lowercase()} of ${transaction.currency} ${transaction.amount} has been recorded."
+                        )
                     } catch (e: Exception) {
                         showFormError(e.message ?: "Failed to save transaction")
                     }
