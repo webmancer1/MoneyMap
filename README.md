@@ -17,7 +17,8 @@ A comprehensive personal finance management mobile application built with Kotlin
 -  Debt Tracker
 -  Recurring Transactions
 -  Savings Goals
--  Category Management  
+-  Category Management
+-  notifications
 
 ### Planned Features
 -  Analytics with Charts
