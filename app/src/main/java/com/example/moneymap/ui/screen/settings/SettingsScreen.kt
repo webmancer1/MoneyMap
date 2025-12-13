@@ -67,9 +67,29 @@ fun SettingsScreen(
     val snackbarHostState = remember { SnackbarHostState() }
     val coroutineScope = rememberCoroutineScope()
     val currencyOptions = listOf(
-        "KES", "USD", "EUR", "GBP", "UGX", "TZS", "RWF", "CAD", "AUD", "JPY",
-        "CNY", "INR", "ZAR", "NGN", "GHS", "AED", "SAR", "CHF", "BRL", "MXN",
-        "RUB", "SGD", "NZD"
+        Currency("KES", "Kenya"),
+        Currency("USD", "United States"),
+        Currency("EUR", "Eurozone"),
+        Currency("GBP", "United Kingdom"),
+        Currency("UGX", "Uganda"),
+        Currency("TZS", "Tanzania"),
+        Currency("RWF", "Rwanda"),
+        Currency("CAD", "Canada"),
+        Currency("AUD", "Australia"),
+        Currency("JPY", "Japan"),
+        Currency("CNY", "China"),
+        Currency("INR", "India"),
+        Currency("ZAR", "South Africa"),
+        Currency("NGN", "Nigeria"),
+        Currency("GHS", "Ghana"),
+        Currency("AED", "United Arab Emirates"),
+        Currency("SAR", "Saudi Arabia"),
+        Currency("CHF", "Switzerland"),
+        Currency("BRL", "Brazil"),
+        Currency("MXN", "Mexico"),
+        Currency("RUB", "Russia"),
+        Currency("SGD", "Singapore"),
+        Currency("NZD", "New Zealand")
     )
 
     LaunchedEffect(authUiState.isLoggedIn) {
@@ -204,7 +224,7 @@ private fun AppearanceSection(
 @Composable
 private fun PreferencesSection(
     selectedCurrency: String,
-    currencyOptions: List<String>,
+    currencyOptions: List<Currency>,
     onCurrencySelected: (String) -> Unit,
     onNavigateToManageCategories: () -> Unit
 ) {
@@ -217,7 +237,7 @@ private fun PreferencesSection(
             onExpandedChange = { expanded = !expanded }
         ) {
             androidx.compose.material3.OutlinedTextField(
-                value = selectedCurrency,
+                value = currencyOptions.find { it.code == selectedCurrency }?.let { "${it.code} (${it.name})" } ?: selectedCurrency,
                 onValueChange = {},
                 readOnly = true,
                 modifier = Modifier
@@ -232,9 +252,9 @@ private fun PreferencesSection(
             ) {
                 currencyOptions.forEach { currency ->
                     androidx.compose.material3.DropdownMenuItem(
-                        text = { Text(currency) },
+                        text = { Text("${currency.code} (${currency.name})") },
                         onClick = {
-                            onCurrencySelected(currency)
+                            onCurrencySelected(currency.code)
                             expanded = false
                         }
                     )
@@ -356,3 +376,5 @@ private fun SettingsCard(
     }
 }
 
+
+private data class Currency(val code: String, val name: String)
