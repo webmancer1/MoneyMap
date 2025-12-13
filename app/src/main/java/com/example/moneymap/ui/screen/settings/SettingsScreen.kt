@@ -66,7 +66,11 @@ fun SettingsScreen(
     val settingsUiState by settingsViewModel.uiState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
     val coroutineScope = rememberCoroutineScope()
-    val currencyOptions = listOf("KES", "USD", "EUR", "GBP", "UGX", "TZS")
+    val currencyOptions = listOf(
+        "KES", "USD", "EUR", "GBP", "UGX", "TZS", "RWF", "CAD", "AUD", "JPY",
+        "CNY", "INR", "ZAR", "NGN", "GHS", "AED", "SAR", "CHF", "BRL", "MXN",
+        "RUB", "SGD", "NZD"
+    )
 
     LaunchedEffect(authUiState.isLoggedIn) {
         if (!authUiState.isLoggedIn) {
