@@ -1,14 +1,18 @@
 package com.example.moneymap.ui.screen.reports
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -194,89 +198,124 @@ private fun SpendingByCategoryChart(uiState: ReportsUiState) {
                 )
             }
         } else {
-            val entries = remember(uiState.spendingByCategory) {
-                uiState.spendingByCategory.mapIndexedNotNull { index, data ->
-                    if (data.amount.isFinite() && data.amount >= 0) {
-                        entryOf(index.toFloat(), data.amount.toFloat())
-                    } else {
-                        null
-                    }
-                }
-            }
-            val labels = remember(uiState.spendingByCategory) {
-                uiState.spendingByCategory.map { it.categoryName }
-            }
-            val modelProducer = remember { ChartEntryModelProducer() }
-            var hasModel by remember { mutableStateOf(false) }
-
-            LaunchedEffect(entries) {
-                if (entries.isNotEmpty()) {
-                    try {
-                        modelProducer.setEntries(listOf(entries))
-                        hasModel = true
-                    } catch (e: Exception) {
-                        e.printStackTrace()
-                        hasModel = false
-                    }
-                } else {
-                    hasModel = false
-                }
+            val totalAmount = remember(uiState.spendingByCategory) {
+                uiState.spendingByCategory.sumOf { it.amount }
             }
 
-            if (hasModel && entries.isNotEmpty()) {
-                val chartModel = modelProducer.getModel()
-                if (chartModel != null) {
-                    Chart(
-                        chart = columnChart(),
-                        model = chartModel,
-                        modifier = Modifier.height(200.dp),
-                        startAxis = rememberStartAxis(),
-                        bottomAxis = rememberBottomAxis(valueFormatter = { value, _ ->
-                            labels.getOrNull(value.toInt()) ?: ""
-                        })
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(220.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                // Pie Chart
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .aspectRatio(1f),
+                    contentAlignment = Alignment.Center
+                ) {
+                    PieChart(
+                        data = uiState.spendingByCategory,
+                        totalAmount = totalAmount,
+                        modifier = Modifier.fillMaxSize()
                     )
-                } else {
-                    Card(
-                        modifier = Modifier.fillMaxWidth(),
-                        colors = CardDefaults.cardColors(
-                            containerColor = MaterialTheme.colorScheme.surfaceVariant
-                        )
-                    ) {
-                        Text(
-                            text = "Loading chart...",
-                            modifier = Modifier.padding(16.dp),
-                            style = MaterialTheme.typography.bodyMedium
-                        )
+                }
+                
+                // Legend
+                Column(
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(start = 16.dp)
+                        .verticalScroll(rememberScrollState()),
+                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    uiState.spendingByCategory.forEach { category ->
+                         val percentage = if (totalAmount > 0) {
+                            (category.amount / totalAmount) * 100
+                        } else 0.0
+                        
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            androidx.compose.foundation.Canvas(modifier = Modifier.size(12.dp)) {
+                                drawCircle(color = parseColor(category.color))
+                            }
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Column {
+                                Text(
+                                    text = category.categoryName,
+                                    style = MaterialTheme.typography.bodySmall,
+                                    maxLines = 1,
+                                    overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+                                )
+                                Text(
+                                    text = "${String.format("%.1f", percentage)}%",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                        }
                     }
-                }
-            } else if (entries.isEmpty()) {
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.surfaceVariant
-                    )
-                ) {
-                    Text(
-                        text = "No data to display",
-                        modifier = Modifier.padding(16.dp),
-                        style = MaterialTheme.typography.bodyMedium
-                    )
-                }
-            } else {
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.surfaceVariant
-                    )
-                ) {
-                    Text(
-                        text = "Loading chart...",
-                        modifier = Modifier.padding(16.dp),
-                        style = MaterialTheme.typography.bodyMedium
-                    )
                 }
             }
         }
+    }
+}
+
+@Composable
+fun PieChart(
+    data: List<CategorySpending>,
+    totalAmount: Double,
+    modifier: Modifier = Modifier
+) {
+    val animateStroke = remember { androidx.compose.animation.core.Animatable(0f) }
+    
+    LaunchedEffect(data) {
+        animateStroke.snapTo(0f)
+        animateStroke.animateTo(
+            targetValue = 1f,
+            animationSpec = androidx.compose.animation.core.tween(durationMillis = 1000)
+        )
+    }
+
+    androidx.compose.foundation.Canvas(modifier = modifier) {
+        val radius = size.minDimension / 2.5f
+        var startAngle = -90f
+
+        data.forEach { category ->
+            val sweepAngle = if (totalAmount > 0) {
+                (category.amount / totalAmount * 360f).toFloat()
+            } else 0f
+            
+            // Animate swipe
+            val animatedSweep = sweepAngle * animateStroke.value
+
+            drawArc(
+                color = parseColor(category.color),
+                startAngle = startAngle,
+                sweepAngle = animatedSweep,
+                useCenter = true,
+                size = androidx.compose.ui.geometry.Size(radius * 2, radius * 2),
+                topLeft = androidx.compose.ui.geometry.Offset(
+                    (size.width - radius * 2) / 2,
+                    (size.height - radius * 2) / 2
+                )
+            )
+            startAngle += sweepAngle
+        }
+        
+        // Draw inner circle for donut effect (optional, removed for pure pie)
+        // drawCircle(
+        //     color = Color.White, // Use background color
+        //     radius = radius * 0.5f
+        // )
+    }
+}
+
+fun parseColor(colorString: String): androidx.compose.ui.graphics.Color {
+    return try {
+        androidx.compose.ui.graphics.Color(android.graphics.Color.parseColor(colorString))
+    } catch (e: Exception) {
+        androidx.compose.ui.graphics.Color.Gray
     }
 }
 

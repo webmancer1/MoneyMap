@@ -34,6 +34,7 @@ enum class ReportPeriod(val months: Int, val label: String) {
 data class CategorySpending(
     val categoryName: String,
     val amount: Double,
+    val color: String,
     val transactionCount: Int = 0,
     val averageAmount: Double = 0.0
 )
@@ -148,6 +149,7 @@ class ReportsViewModel @Inject constructor(
                     CategorySpending(
                         categoryName = categoryName,
                         amount = if (total.isFinite()) total else 0.0,
+                        color = categories.firstOrNull { it.name == categoryName }?.color ?: "#808080",
                         transactionCount = count,
                         averageAmount = if (avg.isFinite()) avg else 0.0
                     )
