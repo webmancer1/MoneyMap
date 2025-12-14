@@ -61,6 +61,31 @@ class SettingsViewModel @Inject constructor(
     fun toggleNotifications(enabled: Boolean) {
         viewModelScope.launch {
             settingsRepository.updateNotificationsEnabled(enabled)
+            // If master switch is off, maybe disable others or just use this as master
+        }
+    }
+
+    fun toggleTransactionNotifications(enabled: Boolean) {
+        viewModelScope.launch {
+            settingsRepository.updateNotificationsTransactions(enabled)
+        }
+    }
+
+    fun toggleBudgetNotifications(enabled: Boolean) {
+        viewModelScope.launch {
+            settingsRepository.updateNotificationsBudget(enabled)
+        }
+    }
+
+    fun toggleSecurityNotifications(enabled: Boolean) {
+        viewModelScope.launch {
+            settingsRepository.updateNotificationsSecurity(enabled)
+        }
+    }
+
+    fun toggleTipsNotifications(enabled: Boolean) {
+        viewModelScope.launch {
+            settingsRepository.updateNotificationsTips(enabled)
         }
     }
 

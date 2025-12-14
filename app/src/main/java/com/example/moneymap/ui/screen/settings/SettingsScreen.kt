@@ -144,8 +144,12 @@ fun SettingsScreen(
             )
 
             NotificationsSection(
-                enabled = settingsUiState.preferences.notificationsEnabled,
-                onToggle = settingsViewModel::toggleNotifications
+                settingsUiState = settingsUiState.preferences,
+                onToggleMaster = settingsViewModel::toggleNotifications,
+                onToggleTransactions = settingsViewModel::toggleTransactionNotifications,
+                onToggleBudget = settingsViewModel::toggleBudgetNotifications,
+                onToggleSecurity = settingsViewModel::toggleSecurityNotifications,
+                onToggleTips = settingsViewModel::toggleTipsNotifications
             )
 
             SecuritySection(
@@ -266,20 +270,48 @@ private fun PreferencesSection(
 
 @Composable
 private fun NotificationsSection(
-    enabled: Boolean,
-    onToggle: (Boolean) -> Unit
+    settingsUiState: com.example.moneymap.data.preferences.SettingsPreferences,
+    onToggleMaster: (Boolean) -> Unit,
+    onToggleTransactions: (Boolean) -> Unit,
+    onToggleBudget: (Boolean) -> Unit,
+    onToggleSecurity: (Boolean) -> Unit,
+    onToggleTips: (Boolean) -> Unit
 ) {
     SettingsCard(title = "Notifications") {
         SettingsToggleRow(
-            title = "Budget alerts",
-            description = "Receive alerts when budgets hit thresholds",
-            checked = enabled,
-            onCheckedChange = onToggle
+            title = "All notifications",
+            description = "Master switch for all notifications",
+            checked = settingsUiState.notificationsEnabled,
+            onCheckedChange = onToggleMaster
         )
-        Divider(modifier = Modifier.padding(vertical = 12.dp))
-        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            Icon(Icons.Default.Info, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
-            Text("Customize notification channels in system settings.", style = MaterialTheme.typography.bodySmall)
+        
+        if (settingsUiState.notificationsEnabled) {
+            Divider(modifier = Modifier.padding(vertical = 8.dp))
+            
+            SettingsToggleRow(
+                title = "Transactions",
+                description = "Alerts for new transactions",
+                checked = settingsUiState.notificationsTransactions,
+                onCheckedChange = onToggleTransactions
+            )
+            SettingsToggleRow(
+                title = "Budget alerts",
+                description = "Warnings when exceeding budget",
+                checked = settingsUiState.notificationsBudget,
+                onCheckedChange = onToggleBudget
+            )
+            SettingsToggleRow(
+                title = "Security alerts",
+                description = "Login and security warnings",
+                checked = settingsUiState.notificationsSecurity,
+                onCheckedChange = onToggleSecurity
+            )
+            SettingsToggleRow(
+                title = "Tips & Reminders",
+                description = "General tips and daily reminders",
+                checked = settingsUiState.notificationsTips,
+                onCheckedChange = onToggleTips
+            )
         }
     }
 }
