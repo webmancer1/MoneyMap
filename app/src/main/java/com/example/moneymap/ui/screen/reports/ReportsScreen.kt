@@ -54,6 +54,7 @@ import com.patrykandpatrick.vico.compose.chart.Chart
 import com.patrykandpatrick.vico.compose.chart.column.columnChart
 import com.patrykandpatrick.vico.core.entry.ChartEntryModelProducer
 import com.patrykandpatrick.vico.core.entry.entryOf
+import com.patrykandpatrick.vico.compose.chart.scroll.rememberChartScrollState
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -395,14 +396,15 @@ private fun IncomeVsExpenseChart(uiState: ReportsUiState) {
                 }
 
                 if (chartModel != null) {
-                    Chart(
-                        chart = columnChart(),
                         model = chartModel!!,
-                        modifier = Modifier.height(200.dp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(250.dp),
                         startAxis = rememberStartAxis(),
                         bottomAxis = rememberBottomAxis(valueFormatter = { value, _ ->
                             labels.getOrNull(value.toInt()) ?: ""
-                        })
+                        }),
+                        chartScrollState = rememberChartScrollState()
                     )
                 } else {
                     Card(
