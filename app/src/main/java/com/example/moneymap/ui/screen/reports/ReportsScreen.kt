@@ -396,6 +396,8 @@ private fun IncomeVsExpenseChart(uiState: ReportsUiState) {
                 }
 
                 if (chartModel != null) {
+                    Chart(
+                        chart = columnChart(),
                         model = chartModel!!,
                         modifier = Modifier
                             .fillMaxWidth()
