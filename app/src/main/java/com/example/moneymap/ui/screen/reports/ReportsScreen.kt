@@ -52,8 +52,8 @@ import com.patrykandpatrick.vico.compose.axis.horizontal.rememberBottomAxis
 import com.patrykandpatrick.vico.compose.axis.vertical.rememberStartAxis
 import com.patrykandpatrick.vico.compose.chart.Chart
 import com.patrykandpatrick.vico.compose.chart.column.columnChart
-import com.patrykandpatrick.vico.core.entry.ChartEntryModelProducer
 import com.patrykandpatrick.vico.core.entry.entryOf
+import com.patrykandpatrick.vico.core.entry.entryModelOf
 import com.patrykandpatrick.vico.compose.chart.scroll.rememberChartScrollState
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -361,80 +361,32 @@ private fun IncomeVsExpenseChart(uiState: ReportsUiState) {
                     }
                 }
             }
+            
+            val chartModel = remember(incomeEntries, expenseEntries) {
+                if (incomeEntries.isNotEmpty() || expenseEntries.isNotEmpty()) {
+                    entryModelOf(incomeEntries, expenseEntries)
+                } else {
+                    null
+                }
+            }
+            
             val labels = remember(uiState.monthlyIncomeExpense) {
                 uiState.monthlyIncomeExpense.map { it.monthLabel }
             }
-            val modelProducer = remember { ChartEntryModelProducer() }
-            var hasModel by remember { mutableStateOf(false) }
 
-            LaunchedEffect(incomeEntries, expenseEntries) {
-                if (incomeEntries.isNotEmpty() || expenseEntries.isNotEmpty()) {
-                    try {
-                        val entriesList = listOf(incomeEntries, expenseEntries)
-                        // Filter out empty lists if needed, but Vico expects consistent series
-                        modelProducer.setEntries(entriesList)
-                        hasModel = true
-                    } catch (e: Exception) {
-                        e.printStackTrace()
-                        hasModel = false
-                    }
-                } else {
-                    hasModel = false
-                }
-            }
-
-            if (hasModel && (incomeEntries.isNotEmpty() || expenseEntries.isNotEmpty())) {
-                var chartModel by remember { mutableStateOf<com.patrykandpatrick.vico.core.entry.ChartEntryModel?>(null) }
-                
-                LaunchedEffect(modelProducer) {
-                    try {
-                        chartModel = modelProducer.getModel()
-                    } catch (e: Exception) {
-                        e.printStackTrace()
-                        chartModel = null
-                    }
-                }
-
-                if (chartModel != null) {
-                    Chart(
-                        chart = columnChart(),
-                        model = chartModel!!,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(250.dp),
-                        startAxis = rememberStartAxis(),
-                        bottomAxis = rememberBottomAxis(valueFormatter = { value, _ ->
-                            labels.getOrNull(value.toInt()) ?: ""
-                        }),
-                        chartScrollState = rememberChartScrollState()
-                    )
-                } else {
-                    Card(
-                        modifier = Modifier.fillMaxWidth(),
-                        colors = CardDefaults.cardColors(
-                            containerColor = MaterialTheme.colorScheme.surfaceVariant
-                        )
-                    ) {
-                        Text(
-                            text = "Loading chart...",
-                            modifier = Modifier.padding(16.dp),
-                            style = MaterialTheme.typography.bodyMedium
-                        )
-                    }
-                }
-            } else if (incomeEntries.isEmpty() && expenseEntries.isEmpty()) {
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.surfaceVariant
-                    )
-                ) {
-                    Text(
-                        text = "No data to display",
-                        modifier = Modifier.padding(16.dp),
-                        style = MaterialTheme.typography.bodyMedium
-                    )
-                }
+            if (chartModel != null) {
+                Chart(
+                    chart = columnChart(),
+                    model = chartModel,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(250.dp),
+                    startAxis = rememberStartAxis(),
+                    bottomAxis = rememberBottomAxis(valueFormatter = { value, _ ->
+                        labels.getOrNull(value.toInt()) ?: ""
+                    }),
+                    chartScrollState = rememberChartScrollState()
+                )
             } else {
                 Card(
                     modifier = Modifier.fillMaxWidth(),
@@ -443,7 +395,7 @@ private fun IncomeVsExpenseChart(uiState: ReportsUiState) {
                     )
                 ) {
                     Text(
-                        text = "Loading chart...",
+                        text = "No data to display",
                         modifier = Modifier.padding(16.dp),
                         style = MaterialTheme.typography.bodyMedium
                     )
