@@ -52,6 +52,8 @@ android {
     }
 }
 
+
+
 dependencies {
     // Core Android
     implementation(libs.androidx.core.ktx)
@@ -100,8 +102,7 @@ dependencies {
     implementation(libs.coil.compose)
     
     // Charts
-    implementation(libs.vico.compose)
-    implementation(libs.vico.core)
+    implementation(libs.mpandroidchart)
     
     // Biometric
     implementation(libs.androidx.biometric)
