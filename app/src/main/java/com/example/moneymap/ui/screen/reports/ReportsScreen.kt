@@ -48,13 +48,14 @@ import com.example.moneymap.ui.viewmodel.PaymentMethodSpending
 import com.example.moneymap.ui.viewmodel.SpendingInsight
 import java.text.NumberFormat
 import java.util.Locale
-import com.patrykandpatrick.vico.compose.axis.horizontal.rememberBottomAxis
-import com.patrykandpatrick.vico.compose.axis.vertical.rememberStartAxis
-import com.patrykandpatrick.vico.compose.chart.Chart
-import com.patrykandpatrick.vico.compose.chart.column.columnChart
-import com.patrykandpatrick.vico.core.entry.ChartEntryModelProducer
-import com.patrykandpatrick.vico.core.entry.entryOf
-import com.patrykandpatrick.vico.compose.chart.scroll.rememberChartScrollState
+import androidx.compose.ui.viewinterop.AndroidView
+import com.github.mikephil.charting.charts.BarChart
+import com.github.mikephil.charting.components.XAxis
+import com.github.mikephil.charting.data.BarData
+import com.github.mikephil.charting.data.BarDataSet
+import com.github.mikephil.charting.data.BarEntry
+import com.github.mikephil.charting.formatter.IndexAxisValueFormatter
+import android.graphics.Color as AndroidColor
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -329,7 +330,12 @@ private fun IncomeVsExpenseChart(uiState: ReportsUiState) {
             fontWeight = FontWeight.SemiBold
         )
 
-        if (uiState.monthlyIncomeExpense.isEmpty()) {
+        // Only show chart if there is data
+        val hasData = remember(uiState.monthlyIncomeExpense) {
+            uiState.monthlyIncomeExpense.any { it.income > 0 || it.expense > 0 }
+        }
+
+        if (!hasData) {
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 colors = CardDefaults.cardColors(
@@ -343,111 +349,95 @@ private fun IncomeVsExpenseChart(uiState: ReportsUiState) {
                 )
             }
         } else {
+            val context = androidx.compose.ui.platform.LocalContext.current
+            
+            // Prepare data entries
             val incomeEntries = remember(uiState.monthlyIncomeExpense) {
-                uiState.monthlyIncomeExpense.mapIndexedNotNull { index, data ->
-                    if (data.income.isFinite() && data.income >= 0) {
-                        entryOf(index.toFloat(), data.income.toFloat())
-                    } else {
-                        null
-                    }
+                uiState.monthlyIncomeExpense.mapIndexed { index, data ->
+                    BarEntry(index.toFloat(), data.income.toFloat())
                 }
             }
             val expenseEntries = remember(uiState.monthlyIncomeExpense) {
-                uiState.monthlyIncomeExpense.mapIndexedNotNull { index, data ->
-                    if (data.expense.isFinite() && data.expense >= 0) {
-                        entryOf(index.toFloat(), data.expense.toFloat())
-                    } else {
-                        null
-                    }
+                uiState.monthlyIncomeExpense.mapIndexed { index, data ->
+                    BarEntry(index.toFloat(), data.expense.toFloat())
                 }
             }
             val labels = remember(uiState.monthlyIncomeExpense) {
                 uiState.monthlyIncomeExpense.map { it.monthLabel }
             }
-            val modelProducer = remember { ChartEntryModelProducer() }
-            var hasModel by remember { mutableStateOf(false) }
 
-            LaunchedEffect(incomeEntries, expenseEntries) {
-                if (incomeEntries.isNotEmpty() || expenseEntries.isNotEmpty()) {
-                    try {
-                        val entriesList = listOf(incomeEntries, expenseEntries)
-                        // Filter out empty lists if needed, but Vico expects consistent series
-                        modelProducer.setEntries(entriesList)
-                        hasModel = true
-                    } catch (e: Exception) {
-                        e.printStackTrace()
-                        hasModel = false
-                    }
-                } else {
-                    hasModel = false
-                }
-            }
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(300.dp), // Increased height for MPAndroidChart
+                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface) // White background for chart clarity
+            ) {
+                AndroidView(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(8.dp),
+                    factory = { ctx ->
+                        BarChart(ctx).apply {
+                            description.isEnabled = false
+                            setDrawGridBackground(false)
+                            setDrawBarShadow(false)
+                            
+                            // Axis configuration
+                            xAxis.apply {
+                                position = XAxis.XAxisPosition.BOTTOM
+                                setDrawGridLines(false)
+                                granularity = 1f
+                                valueFormatter = IndexAxisValueFormatter(labels)
+                            }
+                            
+                            axisLeft.apply {
+                                setDrawGridLines(true)
+                                axisMinimum = 0f // Start from 0
+                            }
+                            axisRight.isEnabled = false
+                            
+                            legend.isEnabled = true
+                            
+                            // Interactions
+                            setPinchZoom(true)
+                            setScaleEnabled(true)
+                        }
+                    },
+                    update = { chart ->
+                        val incomeDataSet = BarDataSet(incomeEntries, "Income").apply {
+                            color = AndroidColor.parseColor("#4CAF50") // Green
+                            valueTextSize = 10f
+                        }
+                        
+                        val expenseDataSet = BarDataSet(expenseEntries, "Expense").apply {
+                            color = AndroidColor.parseColor("#F44336") // Red
+                            valueTextSize = 10f
+                        }
 
-            if (hasModel && (incomeEntries.isNotEmpty() || expenseEntries.isNotEmpty())) {
-                var chartModel by remember { mutableStateOf<com.patrykandpatrick.vico.core.entry.ChartEntryModel?>(null) }
-                
-                LaunchedEffect(modelProducer) {
-                    try {
-                        chartModel = modelProducer.getModel()
-                    } catch (e: Exception) {
-                        e.printStackTrace()
-                        chartModel = null
+                        val barData = BarData(incomeDataSet, expenseDataSet)
+                        barData.barWidth = 0.3f // Narrow bars
+                        
+                        chart.data = barData
+                        
+                        // Group bars logic
+                        val groupSpace = 0.2f
+                        val barSpace = 0.05f // x2 dataset
+                        // (barWidth + barSpace) * 2 + groupSpace = 1.00 -> (0.3 + 0.05) * 2 + 0.3 = 1.0
+                        // 0.35 * 2 = 0.7 + 0.3 = 1.0
+                        // Correct grouping: (0.3 + 0.05) * 2 + 0.2 = 0.9? Wait
+                        // Formula: (barWidth + barSpace) * count + groupSpace = 1.00
+                        // Let's set groupSpace = 0.3f, barSpace = 0.05f. barWidth = 0.3f.
+                        // (0.3 + 0.05) * 2 + 0.3 = 0.7 + 0.3 = 1.0 OK.
+                        
+                        // Note: we need to reset axis min/max to fit groups
+                        chart.xAxis.axisMinimum = 0f
+                        chart.xAxis.axisMaximum = labels.size.toFloat() // start + size (?)
+                        
+                        chart.groupBars(0f, 0.3f, 0.05f) // fromX, groupSpace, barSpace
+                        
+                        chart.invalidate() // Refresh
                     }
-                }
-
-                if (chartModel != null) {
-                    Chart(
-                        chart = columnChart(),
-                        model = chartModel!!,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(250.dp),
-                        startAxis = rememberStartAxis(),
-                        bottomAxis = rememberBottomAxis(valueFormatter = { value, _ ->
-                            labels.getOrNull(value.toInt()) ?: ""
-                        }),
-                        chartScrollState = rememberChartScrollState()
-                    )
-                } else {
-                    Card(
-                        modifier = Modifier.fillMaxWidth(),
-                        colors = CardDefaults.cardColors(
-                            containerColor = MaterialTheme.colorScheme.surfaceVariant
-                        )
-                    ) {
-                        Text(
-                            text = "Loading chart...",
-                            modifier = Modifier.padding(16.dp),
-                            style = MaterialTheme.typography.bodyMedium
-                        )
-                    }
-                }
-            } else if (incomeEntries.isEmpty() && expenseEntries.isEmpty()) {
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.surfaceVariant
-                    )
-                ) {
-                    Text(
-                        text = "No data to display",
-                        modifier = Modifier.padding(16.dp),
-                        style = MaterialTheme.typography.bodyMedium
-                    )
-                }
-            } else {
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.surfaceVariant
-                    )
-                ) {
-                    Text(
-                        text = "Loading chart...",
-                        modifier = Modifier.padding(16.dp),
-                        style = MaterialTheme.typography.bodyMedium
-                    )
-                }
+                )
             }
         }
     }
