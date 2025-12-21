@@ -117,7 +117,15 @@ private fun ReportsContent(
 
         PaymentMethodBreakdown(uiState.paymentMethodSpending)
 
-        IncomeVsExpenseChart(uiState)
+        IncomeVsExpenseChart(
+            title = "This Month's Activity",
+            data = uiState.currentMonthData
+        )
+
+        IncomeVsExpenseChart(
+            title = "Yearly Overview",
+            data = uiState.yearlyData
+        )
     }
 }
 
@@ -322,17 +330,20 @@ fun parseColor(colorString: String): androidx.compose.ui.graphics.Color {
 }
 
 @Composable
-private fun IncomeVsExpenseChart(uiState: ReportsUiState) {
+private fun IncomeVsExpenseChart(
+    title: String,
+    data: List<com.example.moneymap.ui.viewmodel.ChartDataPoint>
+) {
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Text(
-            text = "Income vs Expense",
+            text = title,
             style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.SemiBold
         )
 
         // Only show chart if there is data
-        val hasData = remember(uiState.chartData) {
-            uiState.chartData.any { it.income > 0 || it.expense > 0 }
+        val hasData = remember(data) {
+            data.any { it.income > 0 || it.expense > 0 }
         }
 
         if (!hasData) {
@@ -343,35 +354,32 @@ private fun IncomeVsExpenseChart(uiState: ReportsUiState) {
                 )
             ) {
                 Text(
-                    text = "No transaction data available for the selected period.",
+                    text = "No transaction data available.",
                     modifier = Modifier.padding(16.dp),
                     style = MaterialTheme.typography.bodyMedium
                 )
             }
         } else {
-            val context = androidx.compose.ui.platform.LocalContext.current
-            
             // Prepare data entries
-            // Prepare data entries
-            val incomeEntries = remember(uiState.chartData) {
-                uiState.chartData.mapIndexed { index, data ->
-                    BarEntry(index.toFloat(), data.income.toFloat())
+            val incomeEntries = remember(data) {
+                data.mapIndexed { index, point ->
+                    BarEntry(index.toFloat(), point.income.toFloat())
                 }
             }
-            val expenseEntries = remember(uiState.chartData) {
-                uiState.chartData.mapIndexed { index, data ->
-                    BarEntry(index.toFloat(), data.expense.toFloat())
+            val expenseEntries = remember(data) {
+                data.mapIndexed { index, point ->
+                    BarEntry(index.toFloat(), point.expense.toFloat())
                 }
             }
-            val labels = remember(uiState.chartData) {
-                uiState.chartData.map { it.label }
+            val labels = remember(data) {
+                data.map { it.label }
             }
 
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(300.dp), // Increased height for MPAndroidChart
-                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface) // White background for chart clarity
+                    .height(300.dp),
+                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
             ) {
                 AndroidView(
                     modifier = Modifier
@@ -393,50 +401,41 @@ private fun IncomeVsExpenseChart(uiState: ReportsUiState) {
                             
                             axisLeft.apply {
                                 setDrawGridLines(true)
-                                axisMinimum = 0f // Start from 0
+                                axisMinimum = 0f
                             }
                             axisRight.isEnabled = false
                             
                             legend.isEnabled = true
                             
-                            // Interactions
                             setPinchZoom(true)
                             setScaleEnabled(true)
                         }
                     },
                     update = { chart ->
                         val incomeDataSet = BarDataSet(incomeEntries, "Income").apply {
-                            color = AndroidColor.parseColor("#4CAF50") // Green
+                            color = AndroidColor.parseColor("#4CAF50")
                             valueTextSize = 10f
                         }
                         
                         val expenseDataSet = BarDataSet(expenseEntries, "Expense").apply {
-                            color = AndroidColor.parseColor("#F44336") // Red
+                            color = AndroidColor.parseColor("#F44336")
                             valueTextSize = 10f
                         }
 
                         val barData = BarData(incomeDataSet, expenseDataSet)
-                        barData.barWidth = 0.3f // Narrow bars
+                        barData.barWidth = 0.3f
                         
                         chart.data = barData
                         
                         // Group bars logic
                         val groupSpace = 0.2f
-                        val barSpace = 0.05f // x2 dataset
-                        // (barWidth + barSpace) * 2 + groupSpace = 1.00 -> (0.3 + 0.05) * 2 + 0.3 = 1.0
-                        // 0.35 * 2 = 0.7 + 0.3 = 1.0
-                        // Correct grouping: (0.3 + 0.05) * 2 + 0.2 = 0.9? Wait
-                        // Formula: (barWidth + barSpace) * count + groupSpace = 1.00
-                        // Let's set groupSpace = 0.3f, barSpace = 0.05f. barWidth = 0.3f.
-                        // (0.3 + 0.05) * 2 + 0.3 = 0.7 + 0.3 = 1.0 OK.
-                        
-                        // Note: we need to reset axis min/max to fit groups
+                        val barSpace = 0.05f
                         chart.xAxis.axisMinimum = 0f
-                        chart.xAxis.axisMaximum = labels.size.toFloat() // start + size (?)
+                        chart.xAxis.axisMaximum = labels.size.toFloat()
                         
-                        chart.groupBars(0f, 0.3f, 0.05f) // fromX, groupSpace, barSpace
+                        chart.groupBars(0f, 0.3f, 0.05f)
                         
-                        chart.invalidate() // Refresh
+                        chart.invalidate()
                     }
                 )
             }
