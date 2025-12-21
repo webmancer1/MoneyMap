@@ -331,8 +331,8 @@ private fun IncomeVsExpenseChart(uiState: ReportsUiState) {
         )
 
         // Only show chart if there is data
-        val hasData = remember(uiState.monthlyIncomeExpense) {
-            uiState.monthlyIncomeExpense.any { it.income > 0 || it.expense > 0 }
+        val hasData = remember(uiState.chartData) {
+            uiState.chartData.any { it.income > 0 || it.expense > 0 }
         }
 
         if (!hasData) {
@@ -352,18 +352,19 @@ private fun IncomeVsExpenseChart(uiState: ReportsUiState) {
             val context = androidx.compose.ui.platform.LocalContext.current
             
             // Prepare data entries
-            val incomeEntries = remember(uiState.monthlyIncomeExpense) {
-                uiState.monthlyIncomeExpense.mapIndexed { index, data ->
+            // Prepare data entries
+            val incomeEntries = remember(uiState.chartData) {
+                uiState.chartData.mapIndexed { index, data ->
                     BarEntry(index.toFloat(), data.income.toFloat())
                 }
             }
-            val expenseEntries = remember(uiState.monthlyIncomeExpense) {
-                uiState.monthlyIncomeExpense.mapIndexed { index, data ->
+            val expenseEntries = remember(uiState.chartData) {
+                uiState.chartData.mapIndexed { index, data ->
                     BarEntry(index.toFloat(), data.expense.toFloat())
                 }
             }
-            val labels = remember(uiState.monthlyIncomeExpense) {
-                uiState.monthlyIncomeExpense.map { it.monthLabel }
+            val labels = remember(uiState.chartData) {
+                uiState.chartData.map { it.label }
             }
 
             Card(

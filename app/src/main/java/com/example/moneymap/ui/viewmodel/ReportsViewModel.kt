@@ -39,10 +39,11 @@ data class CategorySpending(
     val averageAmount: Double = 0.0
 )
 
-data class MonthlyIncomeExpense(
-    val monthLabel: String,
+data class ChartDataPoint(
+    val label: String,
     val income: Double,
-    val expense: Double
+    val expense: Double,
+    val timestamp: Long
 )
 
 data class PaymentMethodSpending(
@@ -62,7 +63,7 @@ data class ReportsUiState(
     val totalIncome: Double = 0.0,
     val totalExpense: Double = 0.0,
     val spendingByCategory: List<CategorySpending> = emptyList(),
-    val monthlyIncomeExpense: List<MonthlyIncomeExpense> = emptyList(),
+    val chartData: List<ChartDataPoint> = emptyList(),
     val paymentMethodSpending: List<PaymentMethodSpending> = emptyList(),
     val spendingInsights: List<SpendingInsight> = emptyList(),
     val averageDailySpending: Double = 0.0,
@@ -156,7 +157,7 @@ class ReportsViewModel @Inject constructor(
                 }
                 .sortedByDescending { it.amount }
 
-            val monthlyIncomeExpense = computeMonthlyIncomeExpense(filtered, period, displayCurrency)
+            val chartData = computeChartData(filtered, period, displayCurrency)
             
             val paymentMethodSpending = expenseTransactions
                 .filter { it.paymentMethod != null }
@@ -204,7 +205,7 @@ class ReportsViewModel @Inject constructor(
                 totalIncome = if (totalIncome.isFinite()) totalIncome else 0.0,
                 totalExpense = if (totalExpense.isFinite()) totalExpense else 0.0,
                 spendingByCategory = spendingByCategory,
-                monthlyIncomeExpense = monthlyIncomeExpense,
+                chartData = chartData,
                 paymentMethodSpending = paymentMethodSpending,
                 spendingInsights = spendingInsights,
                 averageDailySpending = averageDailySpending,
@@ -219,7 +220,7 @@ class ReportsViewModel @Inject constructor(
                 totalIncome = 0.0,
                 totalExpense = 0.0,
                 spendingByCategory = emptyList(),
-                monthlyIncomeExpense = emptyList(),
+                chartData = emptyList(),
                 paymentMethodSpending = emptyList(),
                 spendingInsights = emptyList(),
                 averageDailySpending = 0.0,
@@ -248,42 +249,111 @@ class ReportsViewModel @Inject constructor(
         return startDate to endDate
     }
 
-    private fun computeMonthlyIncomeExpense(
+    private fun computeChartData(
         transactions: List<Transaction>,
         period: ReportPeriod,
         displayCurrency: String
-    ): List<MonthlyIncomeExpense> {
-        if (transactions.isEmpty()) return emptyList()
-
+    ): List<ChartDataPoint> {
+        val result = mutableListOf<ChartDataPoint>()
         val calendar = Calendar.getInstance()
-        calendar.set(Calendar.DAY_OF_MONTH, 1)
+        
+        // Reset time part
         calendar.set(Calendar.HOUR_OF_DAY, 0)
         calendar.set(Calendar.MINUTE, 0)
         calendar.set(Calendar.SECOND, 0)
         calendar.set(Calendar.MILLISECOND, 0)
 
-        val monthFormat = SimpleDateFormat("MMM", Locale.getDefault())
-        val result = mutableListOf<MonthlyIncomeExpense>()
+        if (period == ReportPeriod.MONTH) {
+            // Daily breakdown for the current month
+            // We need to iterate from day 1 to end of month/today?
+            // "1 Month" usually implies "This Month" or "Last 30 Days"?
+            // Based on calculatePeriodRange, it subtracts (months - 1). 
+            // If MONTH(1), it subtracts 0, so it is just this current month range?
+            // Actually calculatePeriodRange does:
+            // endDate = now
+            // startDate = 1st of (now - 0 months) = 1st of this month
+            
+            // So we iterate from startDate to endDate (which is today)
+            // But usually charts show valid days.
+            
+            val (startMs, endMs) = calculatePeriodRange(period)
+            
+            // Iterate day by day from start to end
+            val iterateCal = Calendar.getInstance()
+            iterateCal.timeInMillis = startMs
+            
+            val endCal = Calendar.getInstance()
+            endCal.timeInMillis = endMs
+            
+            val dayFormat = SimpleDateFormat("d", Locale.getDefault())
+            
+            while (iterateCal.timeInMillis <= endCal.timeInMillis) {
+                val dayStart = iterateCal.timeInMillis
+                
+                // End of this day
+                val tempCal = iterateCal.clone() as Calendar
+                tempCal.add(Calendar.DAY_OF_MONTH, 1)
+                tempCal.add(Calendar.MILLISECOND, -1)
+                val dayEnd = tempCal.timeInMillis
+                
+                val dailyTransactions = transactions.filter { it.date in dayStart..dayEnd }
+                
+                val income = dailyTransactions
+                    .filter { it.type == TransactionType.INCOME }
+                    .sumOf { tx -> currencyRepository.convert(tx.amount, tx.currency, displayCurrency) }
+                val expense = dailyTransactions
+                    .filter { it.type == TransactionType.EXPENSE }
+                    .sumOf { tx -> currencyRepository.convert(tx.amount, tx.currency, displayCurrency) }
+                
+                // Only add if we want to show all days or just days with data?
+                // Usually showing all days 1..Current looks better
+                result.add(
+                    ChartDataPoint(
+                        label = dayFormat.format(Date(dayStart)),
+                        income = income,
+                        expense = expense,
+                        timestamp = dayStart
+                    )
+                )
+                
+                iterateCal.add(Calendar.DAY_OF_MONTH, 1)
+            }
+        } else {
+            // Monthly breakdown for > 1 month
+            // Existing logic adapted
+            // We iterate back from current month to (period.months - 1) ago
+            
+            // Normalize calendar to start of this month
+            calendar.set(Calendar.DAY_OF_MONTH, 1)
+            
+            val monthFormat = SimpleDateFormat("MMM", Locale.getDefault())
+            
+            // We want chronological order? The loop downTo 0 suggests we build latest first? 
+            // Ah no, loop says 0 is current month, period-1 is oldest.
+            // If we want result to be chronological, we should iterate 0..period-1 but 
+            // calculate months ago.
+            // Or iterate period-1 downTo 0 and add to list.
+            
+            for (i in period.months - 1 downTo 0) {
+                val monthCalendar = (calendar.clone() as Calendar)
+                monthCalendar.add(Calendar.MONTH, -i)
+                val start = monthCalendar.timeInMillis
 
-        for (i in period.months - 1 downTo 0) {
-            val monthCalendar = (calendar.clone() as Calendar)
-            monthCalendar.add(Calendar.MONTH, -i)
-            val start = monthCalendar.timeInMillis
+                monthCalendar.add(Calendar.MONTH, 1)
+                monthCalendar.add(Calendar.MILLISECOND, -1)
+                val end = monthCalendar.timeInMillis
 
-            monthCalendar.add(Calendar.MONTH, 1)
-            monthCalendar.add(Calendar.MILLISECOND, -1)
-            val end = monthCalendar.timeInMillis
+                val monthlyTransactions = transactions.filter { it.date in start..end }
+                val income = monthlyTransactions
+                    .filter { it.type == TransactionType.INCOME }
+                    .sumOf { tx -> currencyRepository.convert(tx.amount, tx.currency, displayCurrency) }
+                val expense = monthlyTransactions
+                    .filter { it.type == TransactionType.EXPENSE }
+                    .sumOf { tx -> currencyRepository.convert(tx.amount, tx.currency, displayCurrency) }
 
-            val monthlyTransactions = transactions.filter { it.date in start..end }
-            val income = monthlyTransactions
-                .filter { it.type == TransactionType.INCOME }
-                .sumOf { tx -> currencyRepository.convert(tx.amount, tx.currency, displayCurrency) }
-            val expense = monthlyTransactions
-                .filter { it.type == TransactionType.EXPENSE }
-                .sumOf { tx -> currencyRepository.convert(tx.amount, tx.currency, displayCurrency) }
-
-            val label = monthFormat.format(Date(start))
-            result.add(MonthlyIncomeExpense(label, income, expense))
+                val label = monthFormat.format(Date(start))
+                result.add(ChartDataPoint(label, income, expense, start))
+            }
         }
 
         return result
