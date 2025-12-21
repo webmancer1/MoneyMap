@@ -164,7 +164,7 @@ class ReportsViewModel @Inject constructor(
             val (monthStart, monthEnd) = getCurrentMonthRange()
             val monthTransactions = transactions.filter { it.date in monthStart..monthEnd }
             val currentMonthData =
-                computeDailyChartData(monthTransactions, monthStart, monthEnd, displayCurrency)
+                computeMonthTotalData(monthTransactions, monthStart, displayCurrency)
 
             val (yearStart, yearEnd) = getCurrentYearRange()
             val yearTransactions = transactions.filter { it.date in yearStart..yearEnd }
@@ -444,69 +444,29 @@ class ReportsViewModel @Inject constructor(
         return startDate to endDate
     }
 
-    private fun computeDailyChartData(
+    private fun computeMonthTotalData(
         transactions: List<Transaction>,
-        startMs: Long,
-        endMs: Long,
+        monthStart: Long,
         displayCurrency: String
     ): List<ChartDataPoint> {
-        val result = mutableListOf<ChartDataPoint>()
-        val iterateCal = Calendar.getInstance()
-        iterateCal.timeInMillis = startMs
-
-        val endCal = Calendar.getInstance()
-        endCal.timeInMillis = endMs
-
-        val dayFormat = SimpleDateFormat("d", Locale.getDefault())
-
-        // Ensure we don't loop forever if dates are wrong
-        if (startMs > endMs) return emptyList()
-
-        while (iterateCal.timeInMillis <= endCal.timeInMillis) {
-            val dayStart = iterateCal.timeInMillis
-
-            val tempCal = iterateCal.clone() as Calendar
-            tempCal.add(Calendar.DAY_OF_MONTH, 1)
-            tempCal.add(Calendar.MILLISECOND, -1)
-            val dayEnd = tempCal.timeInMillis // End of this specific day
-
-            // Should strictly use dayStart..dayEnd
-            val (dIncome, dExpense) = transactions
-                .filter { it.date in dayStart..dayEnd }
-                .let { dayTxs ->
-                    val inc = dayTxs.filter { it.type == TransactionType.INCOME }
-                        .sumOf {
-                            currencyRepository.convert(
-                                it.amount,
-                                it.currency,
-                                displayCurrency
-                            )
-                        }
-                    val exp = dayTxs.filter { it.type == TransactionType.EXPENSE }
-                        .sumOf {
-                            currencyRepository.convert(
-                                it.amount,
-                                it.currency,
-                                displayCurrency
-                            )
-                        }
-                    inc to exp
-                }
-
-            result.add(
-                ChartDataPoint(
-                    label = dayFormat.format(Date(dayStart)),
-                    income = if (dIncome.isFinite()) dIncome else 0.0,
-                    expense = if (dExpense.isFinite()) dExpense else 0.0,
-                    timestamp = dayStart
-                )
+        val monthFormat = SimpleDateFormat("MMMM", Locale.getDefault())
+        
+        val income = transactions
+            .filter { it.type == TransactionType.INCOME }
+            .sumOf { tx -> currencyRepository.convert(tx.amount, tx.currency, displayCurrency) }
+            
+        val expense = transactions
+            .filter { it.type == TransactionType.EXPENSE }
+            .sumOf { tx -> currencyRepository.convert(tx.amount, tx.currency, displayCurrency) }
+            
+        return listOf(
+            ChartDataPoint(
+                label = monthFormat.format(Date(monthStart)),
+                income = if (income.isFinite()) income else 0.0,
+                expense = if (expense.isFinite()) expense else 0.0,
+                timestamp = monthStart
             )
-
-            iterateCal.add(Calendar.DAY_OF_MONTH, 1)
-            // Safety break
-            if (result.size > 366) break
-        }
-        return result
+        )
     }
 
     private fun computeMonthlyChartData(
@@ -570,5 +530,78 @@ class ReportsViewModel @Inject constructor(
             if (result.size > 24) break
         }
         return result
+    }
+    private fun calculateDaysInPeriod(period: ReportPeriod): Int {
+        val calendar = Calendar.getInstance()
+        val endDate = calendar.timeInMillis
+        
+        calendar.set(Calendar.DAY_OF_MONTH, 1)
+        calendar.set(Calendar.HOUR_OF_DAY, 0)
+        calendar.set(Calendar.MINUTE, 0)
+        calendar.set(Calendar.SECOND, 0)
+        calendar.set(Calendar.MILLISECOND, 0)
+        calendar.add(Calendar.MONTH, -(period.months - 1))
+        val startDate = calendar.timeInMillis
+        
+        return ((endDate - startDate) / (1000 * 60 * 60 * 24)).toInt().coerceAtLeast(1)
+    }
+
+    private fun buildSpendingInsights(
+        totalExpense: Double,
+        totalIncome: Double,
+        averageDailySpending: Double,
+        topCategory: CategorySpending?,
+        expenseCount: Int,
+        period: ReportPeriod
+    ): List<SpendingInsight> {
+        val insights = mutableListOf<SpendingInsight>()
+        val currencyFormat = java.text.NumberFormat.getCurrencyInstance(Locale.getDefault())
+        
+        // Savings rate
+        if (totalIncome > 0) {
+            val savingsRate = ((totalIncome - totalExpense) / totalIncome * 100).coerceAtLeast(0.0)
+            insights.add(
+                SpendingInsight(
+                    title = "Savings Rate",
+                    value = "${String.format("%.1f", savingsRate)}%",
+                    description = if (savingsRate > 0) "You're saving well!" else "Try to reduce expenses"
+                )
+            )
+        }
+        
+        // Top spending category
+        topCategory?.let {
+            insights.add(
+                SpendingInsight(
+                    title = "Top Category",
+                    value = it.categoryName,
+                    description = "${currencyFormat.format(it.amount)} across ${it.transactionCount} transactions"
+                )
+            )
+        }
+        
+        // Average daily spending
+        insights.add(
+            SpendingInsight(
+                title = "Daily Average",
+                value = currencyFormat.format(averageDailySpending),
+                description = "Average spending per day in this period"
+            )
+        )
+        
+        // Transaction frequency
+        val avgTransactionsPerDay = if (expenseCount > 0) {
+            val days = calculateDaysInPeriod(period)
+            expenseCount.toDouble() / days
+        } else 0.0
+        insights.add(
+            SpendingInsight(
+                title = "Transaction Frequency",
+                value = String.format("%.1f", avgTransactionsPerDay),
+                description = "Transactions per day on average"
+            )
+        )
+        
+        return insights
     }
 }
