@@ -69,7 +69,9 @@ data class ReportsUiState(
     val spendingInsights: List<SpendingInsight> = emptyList(),
     val averageDailySpending: Double = 0.0,
     val averageTransactionAmount: Double = 0.0,
-    val totalTransactions: Int = 0
+    val totalTransactions: Int = 0,
+    val currentMonthLabel: String = "",
+    val currentYearLabel: String = ""
 )
 
 @HiltViewModel
@@ -84,6 +86,8 @@ class ReportsViewModel @Inject constructor(
     val uiState: StateFlow<ReportsUiState> = _uiState.asStateFlow()
 
     private val selectedPeriod = MutableStateFlow(ReportPeriod.MONTH)
+    private val selectedMonthOffset = MutableStateFlow(0)
+    private val selectedYearOffset = MutableStateFlow(0)
 
     init {
         observeReports()
@@ -101,13 +105,17 @@ class ReportsViewModel @Inject constructor(
                 transactionRepository.getAllTransactions(),
                 categoryRepository.getAllCategories(),
                 selectedPeriod,
-                settingsRepository.settingsFlow
-            ) { transactions, categories, period, settings ->
+                settingsRepository.settingsFlow,
+                selectedMonthOffset,
+                selectedYearOffset
+            ) { transactions, categories, period, settings, monthOffset, yearOffset ->
                 buildUiState(
                     transactions = transactions,
                     categories = categories,
                     period = period,
-                    displayCurrency = settings.currency
+                    displayCurrency = settings.currency,
+                    monthOffset = monthOffset,
+                    yearOffset = yearOffset
                 )
             }
                 .flowOn(Dispatchers.Default)
@@ -121,7 +129,9 @@ class ReportsViewModel @Inject constructor(
         transactions: List<Transaction>,
         categories: List<Category>,
         period: ReportPeriod,
-        displayCurrency: String
+        displayCurrency: String,
+        monthOffset: Int,
+        yearOffset: Int
     ): ReportsUiState {
         return try {
             val (startDate, endDate) = calculatePeriodRange(period)
@@ -161,15 +171,17 @@ class ReportsViewModel @Inject constructor(
                 .sortedByDescending { it.amount }
 
             // Fixed Charts Data
-            val (monthStart, monthEnd) = getCurrentMonthRange()
+            val (monthStart, monthEnd) = getMonthRange(monthOffset)
             val monthTransactions = transactions.filter { it.date in monthStart..monthEnd }
             val currentMonthData =
                 computeMonthTotalData(monthTransactions, monthStart, displayCurrency)
+            val currentMonthLabel = SimpleDateFormat("MMMM yyyy", Locale.getDefault()).format(Date(monthStart))
 
-            val (yearStart, yearEnd) = getCurrentYearRange()
+            val (yearStart, yearEnd) = getYearRange(yearOffset)
             val yearTransactions = transactions.filter { it.date in yearStart..yearEnd }
             val yearlyData =
                 computeYearTotalData(yearTransactions, yearStart, displayCurrency)
+            val currentYearLabel = SimpleDateFormat("yyyy", Locale.getDefault()).format(Date(yearStart))
 
             val paymentMethodSpending = expenseTransactions
                 .filter { it.paymentMethod != null }
@@ -227,7 +239,10 @@ class ReportsViewModel @Inject constructor(
                 spendingInsights = spendingInsights,
                 averageDailySpending = averageDailySpending,
                 averageTransactionAmount = averageTransactionAmount,
-                totalTransactions = totalTransactions
+                averageTransactionAmount = averageTransactionAmount,
+                totalTransactions = totalTransactions,
+                currentMonthLabel = currentMonthLabel,
+                currentYearLabel = currentYearLabel
             )
         } catch (e: Exception) {
             e.printStackTrace()
@@ -243,7 +258,11 @@ class ReportsViewModel @Inject constructor(
                 spendingInsights = emptyList(),
                 averageDailySpending = 0.0,
                 averageTransactionAmount = 0.0,
-                totalTransactions = 0
+                averageDailySpending = 0.0,
+                averageTransactionAmount = 0.0,
+                totalTransactions = 0,
+                currentMonthLabel = "",
+                currentYearLabel = ""
             )
         }
     }
@@ -267,182 +286,11 @@ class ReportsViewModel @Inject constructor(
         return startDate to endDate
     }
 
-    private fun computeChartData(
-        transactions: List<Transaction>,
-        period: ReportPeriod,
-        displayCurrency: String
-    ): List<ChartDataPoint> {
-        val result = mutableListOf<ChartDataPoint>()
-        val calendar = Calendar.getInstance()
 
-        // Reset time part
-        calendar.set(Calendar.HOUR_OF_DAY, 0)
-        calendar.set(Calendar.MINUTE, 0)
-        calendar.set(Calendar.SECOND, 0)
-        calendar.set(Calendar.MILLISECOND, 0)
 
-        if (period == ReportPeriod.MONTH) {
-            // Daily breakdown for the current month
-            // We need to iterate from day 1 to end of month/today?
-            // "1 Month" usually implies "This Month" or "Last 30 Days"?
-            // Based on calculatePeriodRange, it subtracts (months - 1). 
-            // If MONTH(1), it subtracts 0, so it is just this current month range?
-            // Actually calculatePeriodRange does:
-            // endDate = now
-            // startDate = 1st of (now - 0 months) = 1st of this month
 
-            // So we iterate from startDate to endDate (which is today)
-            // But usually charts show valid days.
 
-            val (startMs, endMs) = calculatePeriodRange(period)
 
-            // Iterate day by day from start to end
-            val iterateCal = Calendar.getInstance()
-            iterateCal.timeInMillis = startMs
-
-            val endCal = Calendar.getInstance()
-            endCal.timeInMillis = endMs
-
-            val dayFormat = SimpleDateFormat("d", Locale.getDefault())
-
-            while (iterateCal.timeInMillis <= endCal.timeInMillis) {
-                val dayStart = iterateCal.timeInMillis
-
-                // End of this day
-                val tempCal = iterateCal.clone() as Calendar
-                tempCal.add(Calendar.DAY_OF_MONTH, 1)
-                tempCal.add(Calendar.MILLISECOND, -1)
-                val dayEnd = tempCal.timeInMillis
-
-                val dailyTransactions = transactions.filter { it.date in dayStart..dayEnd }
-
-                val income = dailyTransactions
-                    .filter { it.type == TransactionType.INCOME }
-                    .sumOf { tx ->
-                        currencyRepository.convert(
-                            tx.amount,
-                            tx.currency,
-                            displayCurrency
-                        )
-                    }
-                val expense = dailyTransactions
-                    .filter { it.type == TransactionType.EXPENSE }
-                    .sumOf { tx ->
-                        currencyRepository.convert(
-                            tx.amount,
-                            tx.currency,
-                            displayCurrency
-                        )
-                    }
-
-                // Only add if we want to show all days or just days with data?
-                // Usually showing all days 1..Current looks better
-                result.add(
-                    ChartDataPoint(
-                        label = dayFormat.format(Date(dayStart)),
-                        income = income,
-                        expense = expense,
-                        timestamp = dayStart
-                    )
-                )
-
-                iterateCal.add(Calendar.DAY_OF_MONTH, 1)
-            }
-        } else {
-            // Monthly breakdown for > 1 month
-            // Existing logic adapted
-            // We iterate back from current month to (period.months - 1) ago
-
-            // Normalize calendar to start of this month
-            calendar.set(Calendar.DAY_OF_MONTH, 1)
-
-            val monthFormat = SimpleDateFormat("MMM", Locale.getDefault())
-
-            // We want chronological order? The loop downTo 0 suggests we build latest first? 
-            // Ah no, loop says 0 is current month, period-1 is oldest.
-            // If we want result to be chronological, we should iterate 0..period-1 but 
-            // calculate months ago.
-            // Or iterate period-1 downTo 0 and add to list.
-
-            for (i in period.months - 1 downTo 0) {
-                val monthCalendar = (calendar.clone() as Calendar)
-                monthCalendar.add(Calendar.MONTH, -i)
-                val start = monthCalendar.timeInMillis
-
-                monthCalendar.add(Calendar.MONTH, 1)
-                monthCalendar.add(Calendar.MILLISECOND, -1)
-                val end = monthCalendar.timeInMillis
-
-                val monthlyTransactions = transactions.filter { it.date in start..end }
-                val income = monthlyTransactions
-                    .filter { it.type == TransactionType.INCOME }
-                    .sumOf { tx ->
-                        currencyRepository.convert(
-                            tx.amount,
-                            tx.currency,
-                            displayCurrency
-                        )
-                    }
-                val expense = monthlyTransactions
-                    .filter { it.type == TransactionType.EXPENSE }
-                    .sumOf { tx ->
-                        currencyRepository.convert(
-                            tx.amount,
-                            tx.currency,
-                            displayCurrency
-                        )
-                    }
-
-                val label = monthFormat.format(Date(start))
-                result.add(ChartDataPoint(label, income, expense, start))
-            }
-        }
-
-        return result
-    }
-
-    private fun getCurrentMonthRange(): Pair<Long, Long> {
-        val calendar = Calendar.getInstance()
-        calendar.set(Calendar.HOUR_OF_DAY, 23)
-        calendar.set(Calendar.MINUTE, 59)
-        calendar.set(Calendar.SECOND, 59)
-        calendar.set(Calendar.MILLISECOND, 999)
-        val endDate = calendar.timeInMillis
-
-        // Start of month
-        calendar.set(Calendar.DAY_OF_MONTH, 1)
-        calendar.set(Calendar.HOUR_OF_DAY, 0)
-        calendar.set(Calendar.MINUTE, 0)
-        calendar.set(Calendar.SECOND, 0)
-        calendar.set(Calendar.MILLISECOND, 0)
-        val startDate = calendar.timeInMillis
-
-        return startDate to endDate
-    }
-
-    private fun getCurrentYearRange(): Pair<Long, Long> {
-        val calendar = Calendar.getInstance()
-        calendar.set(
-            Calendar.MONTH,
-            Calendar.DECEMBER
-        ) // End of year? Or Current date? Usually Year report is Jan-Current or Jan-Dec
-        calendar.set(Calendar.DAY_OF_MONTH, 31)
-        calendar.set(Calendar.HOUR_OF_DAY, 23)
-        calendar.set(Calendar.MINUTE, 59)
-        calendar.set(Calendar.SECOND, 59)
-        calendar.set(Calendar.MILLISECOND, 999)
-        val endDate = calendar.timeInMillis
-
-        calendar.set(Calendar.MONTH, Calendar.JANUARY)
-        calendar.set(Calendar.DAY_OF_MONTH, 1)
-        calendar.set(Calendar.HOUR_OF_DAY, 0)
-        calendar.set(Calendar.MINUTE, 0)
-        calendar.set(Calendar.SECOND, 0)
-        calendar.set(Calendar.MILLISECOND, 0)
-        val startDate = calendar.timeInMillis
-
-        return startDate to endDate
-    }
 
     private fun computeMonthTotalData(
         transactions: List<Transaction>,
@@ -627,5 +475,59 @@ class ReportsViewModel @Inject constructor(
                 timestamp = yearStart
             )
         )
+    }
+    
+    fun navigateMonth(direction: Int) {
+        selectedMonthOffset.value += direction
+    }
+
+    fun navigateYear(direction: Int) {
+        selectedYearOffset.value += direction
+    }
+
+    private fun getMonthRange(offset: Int): Pair<Long, Long> {
+        val calendar = Calendar.getInstance()
+        calendar.add(Calendar.MONTH, offset)
+        
+        // End of month
+        calendar.set(Calendar.DAY_OF_MONTH, calendar.getActualMaximum(Calendar.DAY_OF_MONTH))
+        calendar.set(Calendar.HOUR_OF_DAY, 23)
+        calendar.set(Calendar.MINUTE, 59)
+        calendar.set(Calendar.SECOND, 59)
+        calendar.set(Calendar.MILLISECOND, 999)
+        val endDate = calendar.timeInMillis
+
+        // Start of month
+        calendar.set(Calendar.DAY_OF_MONTH, 1)
+        calendar.set(Calendar.HOUR_OF_DAY, 0)
+        calendar.set(Calendar.MINUTE, 0)
+        calendar.set(Calendar.SECOND, 0)
+        calendar.set(Calendar.MILLISECOND, 0)
+        val startDate = calendar.timeInMillis
+
+        return startDate to endDate
+    }
+
+    private fun getYearRange(offset: Int): Pair<Long, Long> {
+        val calendar = Calendar.getInstance()
+        calendar.add(Calendar.YEAR, offset)
+        
+        calendar.set(Calendar.MONTH, Calendar.DECEMBER)
+        calendar.set(Calendar.DAY_OF_MONTH, 31)
+        calendar.set(Calendar.HOUR_OF_DAY, 23)
+        calendar.set(Calendar.MINUTE, 59)
+        calendar.set(Calendar.SECOND, 59)
+        calendar.set(Calendar.MILLISECOND, 999)
+        val endDate = calendar.timeInMillis
+
+        calendar.set(Calendar.MONTH, Calendar.JANUARY)
+        calendar.set(Calendar.DAY_OF_MONTH, 1)
+        calendar.set(Calendar.HOUR_OF_DAY, 0)
+        calendar.set(Calendar.MINUTE, 0)
+        calendar.set(Calendar.SECOND, 0)
+        calendar.set(Calendar.MILLISECOND, 0)
+        val startDate = calendar.timeInMillis
+
+        return startDate to endDate
     }
 }

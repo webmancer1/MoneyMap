@@ -17,6 +17,8 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.KeyboardArrowLeft
+import androidx.compose.material.icons.filled.KeyboardArrowRight
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -80,6 +82,8 @@ fun ReportsScreen(
         ReportsContent(
             uiState = uiState,
             onPeriodSelected = viewModel::onPeriodSelected,
+            onNavigateMonth = viewModel::navigateMonth,
+            onNavigateYear = viewModel::navigateYear,
             contentPadding = paddingValues
         )
     }
@@ -89,6 +93,8 @@ fun ReportsScreen(
 private fun ReportsContent(
     uiState: ReportsUiState,
     onPeriodSelected: (ReportPeriod) -> Unit,
+    onNavigateMonth: (Int) -> Unit,
+    onNavigateYear: (Int) -> Unit,
     contentPadding: PaddingValues
 ) {
     Column(
@@ -118,13 +124,19 @@ private fun ReportsContent(
         PaymentMethodBreakdown(uiState.paymentMethodSpending)
 
         IncomeVsExpenseChart(
-            title = "This Month's Activity",
-            data = uiState.currentMonthData
+            title = "Monthly Activity",
+            data = uiState.currentMonthData,
+            periodLabel = uiState.currentMonthLabel,
+            onPreviousClick = { onNavigateMonth(-1) },
+            onNextClick = { onNavigateMonth(1) }
         )
 
         IncomeVsExpenseChart(
             title = "Yearly Overview",
-            data = uiState.yearlyData
+            data = uiState.yearlyData,
+            periodLabel = uiState.currentYearLabel,
+            onPreviousClick = { onNavigateYear(-1) },
+            onNextClick = { onNavigateYear(1) }
         )
     }
 }
@@ -332,14 +344,54 @@ fun parseColor(colorString: String): androidx.compose.ui.graphics.Color {
 @Composable
 private fun IncomeVsExpenseChart(
     title: String,
-    data: List<com.example.moneymap.ui.viewmodel.ChartDataPoint>
+    data: List<com.example.moneymap.ui.viewmodel.ChartDataPoint>,
+    periodLabel: String? = null,
+    onPreviousClick: (() -> Unit)? = null,
+    onNextClick: (() -> Unit)? = null
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        Text(
-            text = title,
-            style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.SemiBold
-        )
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.SemiBold
+            )
+            
+            if (periodLabel != null && onPreviousClick != null && onNextClick != null) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    IconButton(
+                        onClick = onPreviousClick,
+                        modifier = Modifier.size(24.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.KeyboardArrowLeft,
+                            contentDescription = "Previous"
+                        )
+                    }
+                    Text(
+                        text = periodLabel,
+                        style = MaterialTheme.typography.bodySmall,
+                        fontWeight = FontWeight.Medium
+                    )
+                    IconButton(
+                        onClick = onNextClick,
+                        modifier = Modifier.size(24.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.KeyboardArrowRight,
+                            contentDescription = "Next"
+                        )
+                    }
+                }
+            }
+        }
 
         // Only show chart if there is data
         val hasData = remember(data) {
