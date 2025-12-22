@@ -169,7 +169,7 @@ class ReportsViewModel @Inject constructor(
             val (yearStart, yearEnd) = getCurrentYearRange()
             val yearTransactions = transactions.filter { it.date in yearStart..yearEnd }
             val yearlyData =
-                computeMonthlyChartData(yearTransactions, yearStart, yearEnd, displayCurrency)
+                computeYearTotalData(yearTransactions, yearStart, displayCurrency)
 
             val paymentMethodSpending = expenseTransactions
                 .filter { it.paymentMethod != null }
@@ -201,7 +201,7 @@ class ReportsViewModel @Inject constructor(
                 if (avg.isFinite()) avg else 0.0
             } else 0.0
 
-            val daysInPeriod = calculateDaysInPeriod(period)
+            val daysInPeriod = git calculateDaysInPeriod(period)
             val averageDailySpending = if (daysInPeriod > 0) {
                 val avg = totalExpense / daysInPeriod
                 if (avg.isFinite()) avg else 0.0
@@ -603,5 +603,29 @@ class ReportsViewModel @Inject constructor(
         )
         
         return insights
+    }
+    private fun computeYearTotalData(
+        transactions: List<Transaction>,
+        yearStart: Long,
+        displayCurrency: String
+    ): List<ChartDataPoint> {
+        val yearFormat = SimpleDateFormat("yyyy", Locale.getDefault())
+        
+        val income = transactions
+            .filter { it.type == TransactionType.INCOME }
+            .sumOf { tx -> currencyRepository.convert(tx.amount, tx.currency, displayCurrency) }
+            
+        val expense = transactions
+            .filter { it.type == TransactionType.EXPENSE }
+            .sumOf { tx -> currencyRepository.convert(tx.amount, tx.currency, displayCurrency) }
+            
+        return listOf(
+            ChartDataPoint(
+                label = yearFormat.format(Date(yearStart)),
+                income = if (income.isFinite()) income else 0.0,
+                expense = if (expense.isFinite()) expense else 0.0,
+                timestamp = yearStart
+            )
+        )
     }
 }
