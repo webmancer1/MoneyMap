@@ -201,7 +201,7 @@ class ReportsViewModel @Inject constructor(
                 if (avg.isFinite()) avg else 0.0
             } else 0.0
 
-            val daysInPeriod = git calculateDaysInPeriod(period)
+            val daysInPeriod = calculateDaysInPeriod(period)
             val averageDailySpending = if (daysInPeriod > 0) {
                 val avg = totalExpense / daysInPeriod
                 if (avg.isFinite()) avg else 0.0
