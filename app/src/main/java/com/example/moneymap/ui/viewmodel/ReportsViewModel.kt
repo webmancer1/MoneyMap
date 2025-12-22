@@ -101,14 +101,21 @@ class ReportsViewModel @Inject constructor(
 
     private fun observeReports() {
         viewModelScope.launch {
+            val filtersFlow = combine(
+                selectedPeriod,
+                selectedMonthOffset,
+                selectedYearOffset
+            ) { period, monthOffset, yearOffset ->
+                Triple(period, monthOffset, yearOffset)
+            }
+
             combine(
                 transactionRepository.getAllTransactions(),
                 categoryRepository.getAllCategories(),
-                selectedPeriod,
                 settingsRepository.settingsFlow,
-                selectedMonthOffset,
-                selectedYearOffset
-            ) { transactions, categories, period, settings, monthOffset, yearOffset ->
+                filtersFlow
+            ) { transactions, categories, settings, filters ->
+                val (period, monthOffset, yearOffset) = filters
                 buildUiState(
                     transactions = transactions,
                     categories = categories,
@@ -239,7 +246,6 @@ class ReportsViewModel @Inject constructor(
                 spendingInsights = spendingInsights,
                 averageDailySpending = averageDailySpending,
                 averageTransactionAmount = averageTransactionAmount,
-                averageTransactionAmount = averageTransactionAmount,
                 totalTransactions = totalTransactions,
                 currentMonthLabel = currentMonthLabel,
                 currentYearLabel = currentYearLabel
@@ -256,8 +262,6 @@ class ReportsViewModel @Inject constructor(
                 yearlyData = emptyList(),
                 paymentMethodSpending = emptyList(),
                 spendingInsights = emptyList(),
-                averageDailySpending = 0.0,
-                averageTransactionAmount = 0.0,
                 averageDailySpending = 0.0,
                 averageTransactionAmount = 0.0,
                 totalTransactions = 0,
