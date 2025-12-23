@@ -19,10 +19,9 @@ A comprehensive personal finance management mobile application built with Kotlin
 -  Savings Goals
 -  Category Management
 -  notifications
--  Vico charts
+-  Analytics with Charts
 
 ### Planned Features
--  Analytics with Charts
 -  Biometric Authentication
 -  Export Functionality (CSV, Excel, PDF)
 -  Receipt Upload
