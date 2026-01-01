@@ -26,6 +26,8 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         
+        testFirebaseConnection()
+        
         // Check if user is already logged in
         val firebaseAuth = FirebaseAuth.getInstance()
         val startDestination = if (firebaseAuth.currentUser != null) {
@@ -69,6 +71,23 @@ class MainActivity : ComponentActivity() {
                     )
                 }
             }
-        }
+            }
+    }
+
+    private fun testFirebaseConnection() {
+        val db = com.google.firebase.firestore.FirebaseFirestore.getInstance()
+        val testData = hashMapOf(
+            "timestamp" to com.google.firebase.Timestamp.now(),
+            "status" to "Health Check"
+        )
+
+        db.collection("_connection_test")
+            .add(testData)
+            .addOnSuccessListener { documentReference ->
+                android.util.Log.d("FIREBASE_TEST", "Connection successful! DocumentSnapshot added with ID: ${documentReference.id}")
+            }
+            .addOnFailureListener { e ->
+                android.util.Log.e("FIREBASE_TEST", "Connection failed", e)
+            }
     }
 }
