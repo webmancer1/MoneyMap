@@ -102,4 +102,29 @@ class SettingsViewModel @Inject constructor(
     suspend fun triggerManualSync(): SyncResult {
         return syncManager.triggerManualSync()
     }
+
+    fun setPin(pin: String) {
+        viewModelScope.launch {
+            val hashedPin = hashPin(pin)
+            settingsRepository.updatePin(hashedPin)
+        }
+    }
+
+    fun removePin() {
+        viewModelScope.launch {
+            settingsRepository.updatePin(null)
+        }
+    }
+
+    fun verifyPin(inputPin: String): Boolean {
+        val currentPin = uiState.value.preferences.pin ?: return false
+        return hashPin(inputPin) == currentPin
+    }
+
+    private fun hashPin(pin: String): String {
+        val bytes = pin.toByteArray()
+        val md = java.security.MessageDigest.getInstance("SHA-256")
+        val digest = md.digest(bytes)
+        return digest.fold("") { str, it -> str + "%02x".format(it) }
+    }
 }

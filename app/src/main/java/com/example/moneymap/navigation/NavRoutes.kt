@@ -20,5 +20,7 @@ object NavRoutes {
     const val SETTINGS = "settings"
     const val MANAGE_ACCOUNT = "manage_account"
     const val MANAGE_CATEGORIES = "manage_categories"
+    const val PIN_SETUP = "pin_setup"
+    const val APP_LOCK = "app_lock"
 }
 

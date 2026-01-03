@@ -113,18 +113,19 @@ fun MoneyMapNavigation(
                     }
                 )
             }
-            composable(NavRoutes.BIOMETRIC_LOCK) {
-                BiometricLockScreen(
-                    onAuthenticationSuccess = {
+            composable(NavRoutes.APP_LOCK) {
+                com.example.moneymap.ui.screen.auth.AppLockScreen(
+                    onUnlock = {
                         navController.navigate(NavRoutes.HOME) {
-                            popUpTo(NavRoutes.BIOMETRIC_LOCK) { inclusive = true }
-                        }
-                    },
-                    onSkip = {
-                        navController.navigate(NavRoutes.HOME) {
-                            popUpTo(NavRoutes.BIOMETRIC_LOCK) { inclusive = true }
+                            popUpTo(NavRoutes.APP_LOCK) { inclusive = true }
                         }
                     }
+                )
+            }
+            composable(NavRoutes.PIN_SETUP) {
+                com.example.moneymap.ui.screen.auth.PinSetupScreen(
+                    onNavigateBack = { navController.popBackStack() },
+                    onPinSet = { navController.popBackStack() }
                 )
             }
             composable(NavRoutes.HOME) {
@@ -262,6 +263,9 @@ fun MoneyMapNavigation(
                     },
                     onNavigateToManageCategories = {
                         navController.navigate(NavRoutes.MANAGE_CATEGORIES)
+                    },
+                    onNavigateToPinSetup = {
+                        navController.navigate(NavRoutes.PIN_SETUP)
                     }
                 )
             }

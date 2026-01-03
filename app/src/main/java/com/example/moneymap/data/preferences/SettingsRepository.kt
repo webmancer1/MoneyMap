@@ -29,6 +29,7 @@ private val NOTIFICATIONS_BUDGET_KEY = booleanPreferencesKey("notifications_budg
 private val NOTIFICATIONS_SECURITY_KEY = booleanPreferencesKey("notifications_security")
 private val NOTIFICATIONS_TIPS_KEY = booleanPreferencesKey("notifications_tips")
 private val BIOMETRIC_KEY = booleanPreferencesKey("biometric_lock")
+private val PIN_KEY = stringPreferencesKey("app_pin")
 
 data class SettingsPreferences(
     val darkTheme: Boolean = false,
@@ -38,7 +39,8 @@ data class SettingsPreferences(
     val notificationsBudget: Boolean = true,
     val notificationsSecurity: Boolean = true,
     val notificationsTips: Boolean = true,
-    val biometricLockEnabled: Boolean = false
+    val biometricLockEnabled: Boolean = false,
+    val pin: String? = null
 )
 
 @Singleton
@@ -69,7 +71,8 @@ class SettingsRepository @Inject constructor(
                 notificationsBudget = preferences[NOTIFICATIONS_BUDGET_KEY] ?: true,
                 notificationsSecurity = preferences[NOTIFICATIONS_SECURITY_KEY] ?: true,
                 notificationsTips = preferences[NOTIFICATIONS_TIPS_KEY] ?: true,
-                biometricLockEnabled = preferences[BIOMETRIC_KEY] ?: false
+                biometricLockEnabled = preferences[BIOMETRIC_KEY] ?: false,
+                pin = preferences[PIN_KEY]
             )
         }
 
@@ -118,6 +121,16 @@ class SettingsRepository @Inject constructor(
     suspend fun updateBiometricLock(enabled: Boolean) {
         dataStore.edit { preferences ->
             preferences[BIOMETRIC_KEY] = enabled
+        }
+    }
+
+    suspend fun updatePin(pin: String?) {
+        dataStore.edit { preferences ->
+            if (pin == null) {
+                preferences.remove(PIN_KEY)
+            } else {
+                preferences[PIN_KEY] = pin
+            }
         }
     }
 }

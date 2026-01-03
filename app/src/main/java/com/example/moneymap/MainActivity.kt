@@ -49,17 +49,20 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    // Check for biometric lock on app start
+                    // Check for security lock on app start
                     LaunchedEffect(
                         firebaseAuth.currentUser,
                         settingsState.preferences.biometricLockEnabled,
+                        settingsState.preferences.pin,
+                        settingsState.isLoading,
                         startDestination
                     ) {
-                        if (firebaseAuth.currentUser != null &&
-                            settingsState.preferences.biometricLockEnabled &&
+                        if (!settingsState.isLoading &&
+                            firebaseAuth.currentUser != null &&
+                            (settingsState.preferences.biometricLockEnabled || settingsState.preferences.pin != null) &&
                             startDestination == NavRoutes.HOME
                         ) {
-                            navController.navigate(NavRoutes.BIOMETRIC_LOCK) {
+                            navController.navigate(NavRoutes.APP_LOCK) {
                                 popUpTo(NavRoutes.HOME) { inclusive = true }
                             }
                         }

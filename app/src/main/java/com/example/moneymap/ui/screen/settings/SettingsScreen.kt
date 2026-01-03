@@ -19,6 +19,7 @@ import androidx.compose.material.icons.filled.Info
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
@@ -59,6 +60,7 @@ fun SettingsScreen(
     onSignOut: () -> Unit,
     onNavigateToManageAccount: () -> Unit,
     onNavigateToManageCategories: () -> Unit,
+    onNavigateToPinSetup: () -> Unit,
     authViewModel: AuthViewModel = hiltViewModel(),
     settingsViewModel: SettingsViewModel = hiltViewModel()
 ) {
@@ -154,8 +156,10 @@ fun SettingsScreen(
 
             SecuritySection(
                 biometricEnabled = settingsUiState.preferences.biometricLockEnabled,
+                hasPin = settingsUiState.preferences.pin != null,
                 onToggleBiometric = settingsViewModel::toggleBiometricLock,
-                onSetupPin = { settingsViewModel.triggerPlaceholderMessage("PIN setup coming soon") }
+                onSetupPin = onNavigateToPinSetup,
+                onRemovePin = settingsViewModel::removePin
             )
 
             DataAndSyncSection(
@@ -319,8 +323,10 @@ private fun NotificationsSection(
 @Composable
 private fun SecuritySection(
     biometricEnabled: Boolean,
+    hasPin: Boolean,
     onToggleBiometric: (Boolean) -> Unit,
-    onSetupPin: () -> Unit
+    onSetupPin: () -> Unit,
+    onRemovePin: () -> Unit
 ) {
     SettingsCard(title = "Security") {
         SettingsToggleRow(
@@ -330,8 +336,22 @@ private fun SecuritySection(
             onCheckedChange = onToggleBiometric
         )
         Divider(modifier = Modifier.padding(vertical = 12.dp))
-        OutlinedButton(onClick = onSetupPin, modifier = Modifier.fillMaxWidth()) {
-            Text("Set up PIN lock")
+        
+        if (hasPin) {
+            OutlinedButton(onClick = onSetupPin, modifier = Modifier.fillMaxWidth()) {
+                Text("Change PIN")
+            }
+            OutlinedButton(
+                onClick = onRemovePin, 
+                modifier = Modifier.fillMaxWidth(),
+                colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.error)
+            ) {
+                Text("Remove PIN")
+            }
+        } else {
+            OutlinedButton(onClick = onSetupPin, modifier = Modifier.fillMaxWidth()) {
+                Text("Set up PIN lock")
+            }
         }
     }
 }
