@@ -119,6 +119,11 @@ fun MoneyMapNavigation(
                         navController.navigate(NavRoutes.HOME) {
                             popUpTo(NavRoutes.APP_LOCK) { inclusive = true }
                         }
+                    },
+                    onNavigateToLogin = {
+                        navController.navigate(NavRoutes.LOGIN) {
+                            popUpTo(0) { inclusive = true }
+                        }
                     }
                 )
             }
