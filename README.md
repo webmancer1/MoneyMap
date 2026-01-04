@@ -20,6 +20,7 @@ A comprehensive personal finance management mobile application built with Kotlin
 -  Category Management
 -  notifications
 -  Analytics with Charts
+-  Biometric Authentication
 
 ### Planned Features
 -  Biometric Authentication
