@@ -27,6 +27,8 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flatMapLatest
 import java.text.SimpleDateFormat
 import java.util.Locale
 import java.util.UUID
@@ -79,22 +81,26 @@ class TransactionViewModel @Inject constructor(
     private val _filterState = MutableStateFlow(TransactionFilterState())
     val filterState: StateFlow<TransactionFilterState> = _filterState.asStateFlow()
 
-    val transactions = kotlinx.coroutines.flow.combine(
-        transactionRepository.getAllTransactions(),
-        _filterState
-    ) { list, filter ->
-        list.filter { transaction ->
-            val matchesType = filter.transactionType == null || transaction.type == filter.transactionType
-            val matchesCategory = filter.categoryId == null || transaction.categoryId == filter.categoryId
-            val matchesPaymentMethod = filter.paymentMethod == null || transaction.paymentMethod == filter.paymentMethod
-            
-            val matchesDate = filter.dateRange == null || (transaction.date >= filter.dateRange.first && transaction.date <= filter.dateRange.second)
-            
-            val matchesMinAmount = filter.minAmount == null || transaction.amount >= filter.minAmount
-            val matchesMaxAmount = filter.maxAmount == null || transaction.amount <= filter.maxAmount
+    private val _searchQuery = MutableStateFlow("")
+    val searchQuery = _searchQuery.asStateFlow()
 
-            matchesType && matchesCategory && matchesPaymentMethod && matchesDate && matchesMinAmount && matchesMaxAmount
-        }.sortedByDescending { it.date }
+    @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
+    val transactions = combine(
+        _filterState,
+        _searchQuery
+    ) { filter, query ->
+        Pair(filter, query)
+    }.flatMapLatest { (filter, query) ->
+        transactionRepository.getFilteredTransactions(
+            query = query.takeIf { it.isNotBlank() },
+            type = filter.transactionType,
+            categoryId = filter.categoryId,
+            paymentMethod = filter.paymentMethod,
+            startDate = filter.dateRange?.first,
+            endDate = filter.dateRange?.second,
+            minAmount = filter.minAmount,
+            maxAmount = filter.maxAmount
+        )
     }
     .flowOn(Dispatchers.Default)
     .stateIn(
@@ -102,6 +108,16 @@ class TransactionViewModel @Inject constructor(
         started = SharingStarted.WhileSubscribed(5000),
         initialValue = emptyList()
     )
+
+
+
+    val hasAnyTransactions = transactionRepository.getAllTransactions()
+        .map { it.isNotEmpty() }
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = false
+        )
 
     val categories = categoryRepository.getAllCategories()
         .stateIn(
@@ -370,6 +386,11 @@ class TransactionViewModel @Inject constructor(
 
     fun clearFilters() {
         _filterState.update { TransactionFilterState() }
+        _searchQuery.value = ""
+    }
+
+    fun updateSearchQuery(query: String) {
+        _searchQuery.value = query
     }
 
     fun addNewCategory(name: String, type: CategoryType, color: String) {
