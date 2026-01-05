@@ -26,6 +26,29 @@ interface TransactionDao {
     @Query("SELECT * FROM transactions WHERE syncStatus = :status")
     suspend fun getTransactionsBySyncStatus(status: SyncStatus): List<Transaction>
 
+    @Query("""
+        SELECT * FROM transactions 
+        WHERE (:query IS NULL OR notes LIKE '%' || :query || '%' OR amount LIKE '%' || :query || '%')
+        AND (:type IS NULL OR type = :type)
+        AND (:categoryId IS NULL OR categoryId = :categoryId)
+        AND (:paymentMethod IS NULL OR paymentMethod = :paymentMethod)
+        AND (:startDate IS NULL OR date >= :startDate)
+        AND (:endDate IS NULL OR date <= :endDate)
+        AND (:minAmount IS NULL OR amount >= :minAmount)
+        AND (:maxAmount IS NULL OR amount <= :maxAmount)
+        ORDER BY date DESC
+    """)
+    fun getFilteredTransactions(
+        query: String?,
+        type: TransactionType?,
+        categoryId: String?,
+        paymentMethod: com.example.moneymap.data.model.PaymentMethod?,
+        startDate: Long?,
+        endDate: Long?,
+        minAmount: Double?,
+        maxAmount: Double?
+    ): Flow<List<Transaction>>
+
     @Query("SELECT SUM(amount) FROM transactions WHERE type = :type AND date >= :startDate AND date <= :endDate")
     suspend fun getTotalAmountByTypeAndDateRange(
         type: TransactionType,
