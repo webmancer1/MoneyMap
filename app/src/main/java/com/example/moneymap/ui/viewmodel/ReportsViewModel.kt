@@ -71,7 +71,8 @@ data class ReportsUiState(
     val averageTransactionAmount: Double = 0.0,
     val totalTransactions: Int = 0,
     val currentMonthLabel: String = "",
-    val currentYearLabel: String = ""
+    val currentYearLabel: String = "",
+    val currency: String = "KES"
 )
 
 @HiltViewModel
@@ -232,7 +233,8 @@ class ReportsViewModel @Inject constructor(
                 averageDailySpending = averageDailySpending,
                 topCategory = spendingByCategory.firstOrNull(),
                 expenseCount = expenseCount,
-                period = period
+                period = period,
+                displayCurrency = displayCurrency
             )
 
             ReportsUiState(
@@ -248,7 +250,8 @@ class ReportsViewModel @Inject constructor(
                 averageTransactionAmount = averageTransactionAmount,
                 totalTransactions = totalTransactions,
                 currentMonthLabel = currentMonthLabel,
-                currentYearLabel = currentYearLabel
+                currentYearLabel = currentYearLabel,
+                currency = displayCurrency
             )
         } catch (e: Exception) {
             e.printStackTrace()
@@ -266,7 +269,8 @@ class ReportsViewModel @Inject constructor(
                 averageTransactionAmount = 0.0,
                 totalTransactions = 0,
                 currentMonthLabel = "",
-                currentYearLabel = ""
+                currentYearLabel = "",
+                currency = "KES"
             )
         }
     }
@@ -404,10 +408,13 @@ class ReportsViewModel @Inject constructor(
         averageDailySpending: Double,
         topCategory: CategorySpending?,
         expenseCount: Int,
-        period: ReportPeriod
+        period: ReportPeriod,
+        displayCurrency: String
     ): List<SpendingInsight> {
         val insights = mutableListOf<SpendingInsight>()
+        val currencyInstance = java.util.Currency.getInstance(displayCurrency)
         val currencyFormat = java.text.NumberFormat.getCurrencyInstance(Locale.getDefault())
+        currencyFormat.currency = currencyInstance
         
         // Savings rate
         if (totalIncome > 0) {
