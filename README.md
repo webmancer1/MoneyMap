@@ -24,7 +24,6 @@ A comprehensive personal finance management mobile application built with Kotlin
 -  Export Functionality (CSV, PDF)
 
 ### Planned Features
--  Export Functionality (CSV, Excel, PDF)
 -  Receipt Upload
 -  Firebase Firestore Sync
 
