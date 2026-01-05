@@ -8,8 +8,8 @@ import java.util.UUID
 data class Goal(
     @PrimaryKey
     val id: String = UUID.randomUUID().toString(),
-    val name: String,
-    val targetAmount: Double,
+    val name: String = "",
+    val targetAmount: Double = 0.0,
     val savedAmount: Double = 0.0,
     val targetDate: Long? = null,
     val createdAt: Long = System.currentTimeMillis()
