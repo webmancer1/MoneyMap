@@ -27,23 +27,28 @@ class FirestoreSyncService @Inject constructor(
         val userId = userId ?: return SyncResult.Error("User not authenticated")
         
         return try {
-            syncCategories(userId)
-            syncTransactions(userId)
-            syncBudgets(userId)
-            syncGoals(userId)
-            syncDebts(userId)
-            SyncResult.Success
+            var stats = "Synced: "
+            val catCount = syncCategories(userId)
+            val transCount = syncTransactions(userId)
+            val budgetCount = syncBudgets(userId)
+            val goalCount = syncGoals(userId)
+            val debtCount = syncDebts(userId)
+            
+            stats += "$transCount Trans, $catCount Cats, $budgetCount Budgets"
+            SyncResult.Success(stats)
         } catch (e: Exception) {
             SyncResult.Error(e.message ?: "Sync failed")
         }
     }
 
-    suspend fun syncTransactions(userId: String): SyncResult {
+    suspend fun syncTransactions(userId: String): Int {
+        var count = 0
         return try {
             // Push pending transactions to Firestore
             val pendingTransactions = transactionRepository.getPendingSyncTransactions()
             pendingTransactions.forEach { transaction ->
                 uploadTransaction(userId, transaction)
+                count++
             }
 
             // Pull transactions from Firestore
@@ -67,13 +72,14 @@ class FirestoreSyncService @Inject constructor(
                 }
             }
 
-            SyncResult.Success
+            count
         } catch (e: Exception) {
-            SyncResult.Error(e.message ?: "Failed to sync transactions")
+            throw e
         }
     }
 
-    suspend fun syncCategories(userId: String): SyncResult {
+    suspend fun syncCategories(userId: String): Int {
+        var count = 0
         return try {
             // Push categories to Firestore
             val categories = categoryRepository.getAllCategories().first()
@@ -85,6 +91,7 @@ class FirestoreSyncService @Inject constructor(
                     .document(category.id)
                     .set(category, SetOptions.merge())
                     .await()
+                count++
             }
 
             // Pull categories from Firestore
@@ -106,13 +113,14 @@ class FirestoreSyncService @Inject constructor(
                 }
             }
 
-            SyncResult.Success
+            count
         } catch (e: Exception) {
-            SyncResult.Error(e.message ?: "Failed to sync categories")
+            throw e
         }
     }
 
-    suspend fun syncBudgets(userId: String): SyncResult {
+    suspend fun syncBudgets(userId: String): Int {
+        var count = 0
         return try {
             // Push budgets to Firestore
             val budgets = budgetRepository.getAllBudgets().first()
@@ -124,6 +132,7 @@ class FirestoreSyncService @Inject constructor(
                     .document(budget.id)
                     .set(budget, SetOptions.merge())
                     .await()
+                count++
             }
 
             // Pull budgets from Firestore
@@ -144,13 +153,14 @@ class FirestoreSyncService @Inject constructor(
                 }
             }
 
-            SyncResult.Success
+            count
         } catch (e: Exception) {
-            SyncResult.Error(e.message ?: "Failed to sync budgets")
+            throw e
         }
     }
 
-    suspend fun syncGoals(userId: String): SyncResult {
+    suspend fun syncGoals(userId: String): Int {
+        var count = 0
         return try {
             // Push goals to Firestore
             val goals = goalRepository.getAllGoals().first()
@@ -162,6 +172,7 @@ class FirestoreSyncService @Inject constructor(
                     .document(goal.id)
                     .set(goal, SetOptions.merge())
                     .await()
+                count++
             }
 
             // Pull goals from Firestore
@@ -182,13 +193,14 @@ class FirestoreSyncService @Inject constructor(
                 }
             }
 
-            SyncResult.Success
+            count
         } catch (e: Exception) {
-            SyncResult.Error(e.message ?: "Failed to sync goals")
+            throw e
         }
     }
 
-    suspend fun syncDebts(userId: String): SyncResult {
+    suspend fun syncDebts(userId: String): Int {
+        var count = 0
         return try {
             // Push debts to Firestore
             val debts = debtRepository.getAllDebts().first()
@@ -200,6 +212,7 @@ class FirestoreSyncService @Inject constructor(
                     .document(debt.id)
                     .set(debt, SetOptions.merge())
                     .await()
+                count++
             }
 
             // Pull debts from Firestore
@@ -220,9 +233,9 @@ class FirestoreSyncService @Inject constructor(
                 }
             }
 
-            SyncResult.Success
+            count
         } catch (e: Exception) {
-            SyncResult.Error(e.message ?: "Failed to sync debts")
+            throw e
         }
     }
 
@@ -259,7 +272,7 @@ class FirestoreSyncService @Inject constructor(
                 .document(transactionId)
                 .delete()
                 .await()
-            SyncResult.Success
+            SyncResult.Success()
         } catch (e: Exception) {
             SyncResult.Error(e.message ?: "Failed to delete transaction from cloud")
         }
@@ -267,7 +280,7 @@ class FirestoreSyncService @Inject constructor(
 }
 
 sealed class SyncResult {
-    object Success : SyncResult()
+    data class Success(val stats: String = "") : SyncResult()
     data class Error(val message: String) : SyncResult()
 }
 
