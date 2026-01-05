@@ -23,7 +23,8 @@ data class SettingsUiState(
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
     private val settingsRepository: SettingsRepository,
-    private val syncManager: SyncManager
+    private val syncManager: SyncManager,
+    private val backupManager: com.example.moneymap.data.backup.BackupManager
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(SettingsUiState())
@@ -101,6 +102,22 @@ class SettingsViewModel @Inject constructor(
 
     suspend fun triggerManualSync(): SyncResult {
         return syncManager.triggerManualSync()
+    }
+
+    fun toggleAutoSync(enabled: Boolean) {
+        viewModelScope.launch {
+            settingsRepository.updateAutoSync(enabled)
+            if (enabled) {
+                syncManager.schedulePeriodicSync()
+            } else {
+                syncManager.cancelPeriodicSync()
+            }
+        }
+    }
+
+    suspend fun performBackup(): SyncResult {
+        triggerPlaceholderMessage("Starting backup...")
+        return backupManager.createBackup()
     }
 
     fun setPin(pin: String) {
