@@ -32,6 +32,21 @@ class TransactionRepository @Inject constructor(
         return transactionDao.getTransactionsByDateRange(startDate, endDate)
     }
 
+    fun getFilteredTransactions(
+        query: String? = null,
+        type: TransactionType? = null,
+        categoryId: String? = null,
+        paymentMethod: com.example.moneymap.data.model.PaymentMethod? = null,
+        startDate: Long? = null,
+        endDate: Long? = null,
+        minAmount: Double? = null,
+        maxAmount: Double? = null
+    ): Flow<List<Transaction>> {
+        return transactionDao.getFilteredTransactions(
+            query, type, categoryId, paymentMethod, startDate, endDate, minAmount, maxAmount
+        )
+    }
+
     suspend fun getTotalAmountByTypeAndDateRange(
         type: TransactionType,
         startDate: Long,
