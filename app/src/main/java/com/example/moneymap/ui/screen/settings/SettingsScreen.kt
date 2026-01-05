@@ -49,9 +49,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.compose.ui.platform.LocalContext
+import androidx.core.content.FileProvider
 import com.example.moneymap.ui.viewmodel.AuthViewModel
 import com.example.moneymap.ui.viewmodel.SettingsViewModel
 import kotlinx.coroutines.launch
+import java.io.File
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -68,6 +71,7 @@ fun SettingsScreen(
     val settingsUiState by settingsViewModel.uiState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
     val coroutineScope = rememberCoroutineScope()
+    val context = LocalContext.current
     val currencyOptions = listOf(
         Currency("KES", "Kenya"),
         Currency("USD", "United States"),
@@ -177,7 +181,29 @@ fun SettingsScreen(
                         )
                     }
                 },
-                onExport = { settingsViewModel.triggerPlaceholderMessage("Export feature coming soon") }
+                onExport = {
+                    coroutineScope.launch {
+                        val result = settingsViewModel.performExport()
+                        if (result is com.example.moneymap.data.sync.SyncResult.Success) {
+                            val file = File(result.stats)
+                            val uri = FileProvider.getUriForFile(
+                                context,
+                                "${context.packageName}.provider",
+                                file
+                            )
+                            val intent = android.content.Intent(android.content.Intent.ACTION_SEND).apply {
+                                type = "application/zip"
+                                putExtra(android.content.Intent.EXTRA_STREAM, uri)
+                                addFlags(android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                            }
+                            context.startActivity(android.content.Intent.createChooser(intent, "Share Export"))
+                        } else {
+                            snackbarHostState.showSnackbar(
+                                (result as? com.example.moneymap.data.sync.SyncResult.Error)?.message ?: "Export failed"
+                            )
+                        }
+                    }
+                }
             )
 
             SignOutSection(onSignOut = authViewModel::signOut)
@@ -377,7 +403,7 @@ private fun DataAndSyncSection(
                 Text("Manual sync")
             }
             OutlinedButton(onClick = onExport, modifier = Modifier.fillMaxWidth()) {
-                Text("Export transactions")
+                Text("Export to CSV (ZIP)")
             }
         }
     }
