@@ -8,11 +8,11 @@ import java.util.UUID
 data class Budget(
     @PrimaryKey
     val id: String = UUID.randomUUID().toString(),
-    val categoryId: String,
-    val amount: Double,
-    val period: BudgetPeriod,
-    val startDate: Long,
-    val endDate: Long,
+    val categoryId: String = "",
+    val amount: Double = 0.0,
+    val period: BudgetPeriod = BudgetPeriod.MONTHLY,
+    val startDate: Long = 0L,
+    val endDate: Long = 0L,
     val alertThreshold: Float = 0.8f, // 80% threshold
     val isActive: Boolean = true
 )
