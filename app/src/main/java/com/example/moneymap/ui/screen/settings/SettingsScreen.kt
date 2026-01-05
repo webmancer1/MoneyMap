@@ -163,6 +163,8 @@ fun SettingsScreen(
             )
 
             DataAndSyncSection(
+                autoSyncEnabled = settingsUiState.preferences.autoSyncEnabled,
+                onToggleAutoSync = settingsViewModel::toggleAutoSync,
                 onManualSync = {
                     coroutineScope.launch {
                         val result = settingsViewModel.triggerManualSync()
@@ -175,7 +177,18 @@ fun SettingsScreen(
                         )
                     }
                 },
-                onBackup = { settingsViewModel.triggerPlaceholderMessage("Backup feature coming soon") },
+                onBackup = {
+                    coroutineScope.launch {
+                        val result = settingsViewModel.performBackup()
+                        snackbarHostState.showSnackbar(
+                            if (result is com.example.moneymap.data.sync.SyncResult.Success) {
+                                "Backup created successfully"
+                            } else {
+                                (result as? com.example.moneymap.data.sync.SyncResult.Error)?.message ?: "Backup failed"
+                            }
+                        )
+                    }
+                },
                 onExport = { settingsViewModel.triggerPlaceholderMessage("Export feature coming soon") }
             )
 
@@ -358,11 +371,20 @@ private fun SecuritySection(
 
 @Composable
 private fun DataAndSyncSection(
+    autoSyncEnabled: Boolean,
+    onToggleAutoSync: (Boolean) -> Unit,
     onManualSync: () -> Unit,
     onBackup: () -> Unit,
     onExport: () -> Unit
 ) {
     SettingsCard(title = "Data & Sync") {
+        SettingsToggleRow(
+            title = "Automatic sync",
+            description = "Sync data every 15 minutes",
+            checked = autoSyncEnabled,
+            onCheckedChange = onToggleAutoSync
+        )
+        Divider(modifier = Modifier.padding(vertical = 8.dp))
         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
             FilledTonalButton(onClick = onManualSync, modifier = Modifier.fillMaxWidth()) {
                 Text("Manual sync")
