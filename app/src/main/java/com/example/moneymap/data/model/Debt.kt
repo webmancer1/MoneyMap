@@ -8,9 +8,9 @@ import java.util.UUID
 data class Debt(
     @PrimaryKey
     val id: String = UUID.randomUUID().toString(),
-    val type: DebtType,
-    val personName: String,
-    val totalAmount: Double,
+    val type: DebtType = DebtType.PAYABLE,
+    val personName: String = "",
+    val totalAmount: Double = 0.0,
     val paidAmount: Double = 0.0,
     val dueDate: Long? = null,
     val notes: String? = null,
