@@ -114,6 +114,7 @@ dependencies {
     implementation(libs.androidx.security.crypto)
     implementation(libs.sqlcipher.android)
     implementation(libs.androidx.datastore.preferences)
+    implementation(libs.gson)
     
     // ViewModel
     implementation(libs.androidx.lifecycle.viewmodel.ktx)
