@@ -23,8 +23,7 @@ data class SettingsUiState(
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
     private val settingsRepository: SettingsRepository,
-    private val syncManager: SyncManager,
-    private val backupManager: com.example.moneymap.data.backup.BackupManager
+    private val syncManager: SyncManager
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(SettingsUiState())
@@ -115,10 +114,6 @@ class SettingsViewModel @Inject constructor(
         }
     }
 
-    suspend fun performBackup(): SyncResult {
-        triggerPlaceholderMessage("Starting backup...")
-        return backupManager.createBackup()
-    }
 
     fun setPin(pin: String) {
         viewModelScope.launch {
