@@ -170,7 +170,7 @@ fun SettingsScreen(
                         val result = settingsViewModel.triggerManualSync()
                         snackbarHostState.showSnackbar(
                             if (result is com.example.moneymap.data.sync.SyncResult.Success) {
-                                "Sync completed successfully"
+                                "Sync completed: ${result.stats}"
                             } else {
                                 (result as? com.example.moneymap.data.sync.SyncResult.Error)?.message ?: "Sync failed"
                             }
@@ -182,7 +182,7 @@ fun SettingsScreen(
                         val result = settingsViewModel.performBackup()
                         snackbarHostState.showSnackbar(
                             if (result is com.example.moneymap.data.sync.SyncResult.Success) {
-                                "Backup created successfully"
+                                "Backup created: ${result.stats}"
                             } else {
                                 (result as? com.example.moneymap.data.sync.SyncResult.Error)?.message ?: "Backup failed"
                             }
