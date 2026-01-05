@@ -21,6 +21,7 @@ A comprehensive personal finance management mobile application built with Kotlin
 -  notifications
 -  Analytics with Charts
 -  Biometric Authentication
+-  Export Functionality (CSV, PDF)
 
 ### Planned Features
 -  Export Functionality (CSV, Excel, PDF)
