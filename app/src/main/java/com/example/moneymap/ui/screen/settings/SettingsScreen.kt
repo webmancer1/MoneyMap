@@ -71,6 +71,7 @@ fun SettingsScreen(
     val settingsUiState by settingsViewModel.uiState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
     val coroutineScope = rememberCoroutineScope()
+    var showExportDialog by remember { mutableStateOf(false) }
     val context = LocalContext.current
     val currencyOptions = listOf(
         Currency("KES", "Kenya"),
@@ -108,6 +109,60 @@ fun SettingsScreen(
         settingsViewModel.messages.collect { message ->
             snackbarHostState.showSnackbar(message)
         }
+    }
+
+    if (showExportDialog) {
+        androidx.compose.material3.AlertDialog(
+            onDismissRequest = { showExportDialog = false },
+            title = { Text("Export Data") },
+            text = { Text("Choose a format for your export:") },
+            confirmButton = {
+                androidx.compose.material3.TextButton(
+                    onClick = {
+                        showExportDialog = false
+                        coroutineScope.launch {
+                            val type = com.example.moneymap.data.export.ExportManager.ExportType.CSV
+                            val result = settingsViewModel.performExport(type)
+                            if (result is com.example.moneymap.data.sync.SyncResult.Success) {
+                                val file = File(result.stats)
+                                val uri = FileProvider.getUriForFile(context, "${context.packageName}.provider", file)
+                                val intent = android.content.Intent(android.content.Intent.ACTION_SEND).apply {
+                                    this.type = "application/zip"
+                                    putExtra(android.content.Intent.EXTRA_STREAM, uri)
+                                    addFlags(android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                                }
+                                context.startActivity(android.content.Intent.createChooser(intent, "Share Export"))
+                            } else {
+                                snackbarHostState.showSnackbar((result as? com.example.moneymap.data.sync.SyncResult.Error)?.message ?: "Export failed")
+                            }
+                        }
+                    }
+                ) { Text("CSV (Zip)") }
+            },
+            dismissButton = {
+                androidx.compose.material3.TextButton(
+                    onClick = {
+                        showExportDialog = false
+                        coroutineScope.launch {
+                            val type = com.example.moneymap.data.export.ExportManager.ExportType.PDF
+                            val result = settingsViewModel.performExport(type)
+                            if (result is com.example.moneymap.data.sync.SyncResult.Success) {
+                                val file = File(result.stats)
+                                val uri = FileProvider.getUriForFile(context, "${context.packageName}.provider", file)
+                                val intent = android.content.Intent(android.content.Intent.ACTION_SEND).apply {
+                                    this.type = "application/pdf"
+                                    putExtra(android.content.Intent.EXTRA_STREAM, uri)
+                                    addFlags(android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                                }
+                                context.startActivity(android.content.Intent.createChooser(intent, "Share Export"))
+                            } else {
+                                snackbarHostState.showSnackbar((result as? com.example.moneymap.data.sync.SyncResult.Error)?.message ?: "Export failed")
+                            }
+                        }
+                    }
+                ) { Text("PDF") }
+            }
+        )
     }
 
     Scaffold(
@@ -181,29 +236,7 @@ fun SettingsScreen(
                         )
                     }
                 },
-                onExport = {
-                    coroutineScope.launch {
-                        val result = settingsViewModel.performExport()
-                        if (result is com.example.moneymap.data.sync.SyncResult.Success) {
-                            val file = File(result.stats)
-                            val uri = FileProvider.getUriForFile(
-                                context,
-                                "${context.packageName}.provider",
-                                file
-                            )
-                            val intent = android.content.Intent(android.content.Intent.ACTION_SEND).apply {
-                                type = "application/zip"
-                                putExtra(android.content.Intent.EXTRA_STREAM, uri)
-                                addFlags(android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                            }
-                            context.startActivity(android.content.Intent.createChooser(intent, "Share Export"))
-                        } else {
-                            snackbarHostState.showSnackbar(
-                                (result as? com.example.moneymap.data.sync.SyncResult.Error)?.message ?: "Export failed"
-                            )
-                        }
-                    }
-                }
+                onExport = { showExportDialog = true }
             )
 
             SignOutSection(onSignOut = authViewModel::signOut)
@@ -403,7 +436,7 @@ private fun DataAndSyncSection(
                 Text("Manual sync")
             }
             OutlinedButton(onClick = onExport, modifier = Modifier.fillMaxWidth()) {
-                Text("Export to CSV (ZIP)")
+                Text("Export data")
             }
         }
     }
