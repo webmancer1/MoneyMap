@@ -116,9 +116,10 @@ class SettingsViewModel @Inject constructor(
     }
 
 
-    suspend fun performExport(): SyncResult {
-        triggerPlaceholderMessage("Starting export (CSV)...")
-        return exportManager.exportData()
+    suspend fun performExport(type: com.example.moneymap.data.export.ExportManager.ExportType): SyncResult {
+        val typeName = if (type == com.example.moneymap.data.export.ExportManager.ExportType.CSV) "CSV" else "PDF"
+        triggerPlaceholderMessage("Starting export ($typeName)...")
+        return exportManager.exportData(type)
     }
 
 
