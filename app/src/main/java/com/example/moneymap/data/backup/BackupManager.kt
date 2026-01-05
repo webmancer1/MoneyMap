@@ -64,7 +64,7 @@ class BackupManager @Inject constructor(
             val storageRef = firebaseStorage.reference.child(path)
             storageRef.putBytes(jsonString.toByteArray()).await()
 
-            SyncResult.Success
+            SyncResult.Success("Backup uploaded to ${path}")
         } catch (e: Exception) {
             SyncResult.Error(e.message ?: "Backup failed")
         }
