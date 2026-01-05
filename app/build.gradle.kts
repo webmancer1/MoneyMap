@@ -75,6 +75,7 @@ dependencies {
     // Room Database
     implementation(libs.androidx.room.runtime)
     implementation(libs.androidx.room.ktx)
+    implementation(libs.firebase.firestore)
     kapt(libs.androidx.room.compiler)
     
     // Hilt Dependency Injection
