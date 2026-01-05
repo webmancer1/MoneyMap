@@ -83,12 +83,11 @@ fun TransactionListScreen(
     val coroutineScope = rememberCoroutineScope()
 
     val filterState by viewModel.filterState.collectAsState()
-    var showFilterSheet by remember { mutableStateOf(false) }
+    val searchQuery by viewModel.searchQuery.collectAsState()
     
-    // We keep search local for now, but type filter moves to VM
-    var searchQuery by remember { mutableStateOf("") }
+    var showFilterSheet by remember { mutableStateOf(false) }
     var showDeleteDialogFor by remember { mutableStateOf<Transaction?>(null) }
-
+    
     val currencyFormat = remember(displayCurrency) { 
         val locale = Locale.getDefault()
         NumberFormat.getCurrencyInstance(locale).apply {
@@ -96,14 +95,6 @@ fun TransactionListScreen(
         }
     }
     val dateFormat = remember { SimpleDateFormat("MMM dd, yyyy", Locale.getDefault()) }
-
-    val filteredTransactions = remember(transactions, searchQuery) {
-        transactions.filter { transaction ->
-            searchQuery.isBlank() ||
-                transaction.notes?.contains(searchQuery, ignoreCase = true) == true ||
-                currencyFormat.format(transaction.amount).contains(searchQuery, ignoreCase = true)
-        }
-    }
 
     LaunchedEffect(Unit) {
         viewModel.deleteEvent.collect {
@@ -160,7 +151,7 @@ fun TransactionListScreen(
         ) {
             OutlinedTextField(
                 value = searchQuery,
-                onValueChange = { searchQuery = it },
+                onValueChange = { viewModel.updateSearchQuery(it) },
                 label = { Text("Search") },
                 modifier = Modifier
                     .fillMaxWidth()
@@ -196,10 +187,12 @@ fun TransactionListScreen(
                     label = { Text("Expense") }
                 )
             }
+            
+            val hasAnyTransactions by viewModel.hasAnyTransactions.collectAsState()
 
-            if (filteredTransactions.isEmpty()) {
+            if (transactions.isEmpty()) {
                 EmptyTransactionsState(
-                    hasTransactions = transactions.isNotEmpty(),
+                    hasTransactions = hasAnyTransactions,
                     onAddTransaction = onNavigateToAddTransaction
                 )
             } else {
@@ -208,7 +201,7 @@ fun TransactionListScreen(
                     contentPadding = PaddingValues(16.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    items(filteredTransactions, key = { it.id }) { transaction ->
+                    items(transactions, key = { it.id }) { transaction ->
                         val category = categories.firstOrNull { it.id == transaction.categoryId }
                         TransactionListItem(
                             transaction = transaction,
