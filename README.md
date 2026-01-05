@@ -26,7 +26,7 @@ A comprehensive personal finance management mobile application built with Kotlin
 
 ### Planned Features
 -  Receipt Upload
--  Firebase Firestore Sync
+  
 
 ## Technical Stack
 
