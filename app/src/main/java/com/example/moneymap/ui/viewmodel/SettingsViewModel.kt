@@ -23,7 +23,8 @@ data class SettingsUiState(
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
     private val settingsRepository: SettingsRepository,
-    private val syncManager: SyncManager
+    private val syncManager: SyncManager,
+    private val exportManager: com.example.moneymap.data.export.ExportManager
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(SettingsUiState())
@@ -112,6 +113,12 @@ class SettingsViewModel @Inject constructor(
                 syncManager.cancelPeriodicSync()
             }
         }
+    }
+
+
+    suspend fun performExport(): SyncResult {
+        triggerPlaceholderMessage("Starting export (CSV)...")
+        return exportManager.exportData()
     }
 
 
