@@ -8,11 +8,11 @@ import java.util.UUID
 data class Transaction(
     @PrimaryKey
     val id: String = UUID.randomUUID().toString(),
-    val type: TransactionType,
-    val amount: Double,
+    val type: TransactionType = TransactionType.EXPENSE,
+    val amount: Double = 0.0,
     val currency: String = "KES",
-    val categoryId: String,
-    val date: Long, // Unix timestamp
+    val categoryId: String = "",
+    val date: Long = 0L, // Unix timestamp
     val notes: String? = null,
     val paymentMethod: PaymentMethod? = null,
     val tags: List<String> = emptyList(),
