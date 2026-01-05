@@ -177,18 +177,6 @@ fun SettingsScreen(
                         )
                     }
                 },
-                onBackup = {
-                    coroutineScope.launch {
-                        val result = settingsViewModel.performBackup()
-                        snackbarHostState.showSnackbar(
-                            if (result is com.example.moneymap.data.sync.SyncResult.Success) {
-                                "Backup created: ${result.stats}"
-                            } else {
-                                (result as? com.example.moneymap.data.sync.SyncResult.Error)?.message ?: "Backup failed"
-                            }
-                        )
-                    }
-                },
                 onExport = { settingsViewModel.triggerPlaceholderMessage("Export feature coming soon") }
             )
 
@@ -374,7 +362,6 @@ private fun DataAndSyncSection(
     autoSyncEnabled: Boolean,
     onToggleAutoSync: (Boolean) -> Unit,
     onManualSync: () -> Unit,
-    onBackup: () -> Unit,
     onExport: () -> Unit
 ) {
     SettingsCard(title = "Data & Sync") {
@@ -388,9 +375,6 @@ private fun DataAndSyncSection(
         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
             FilledTonalButton(onClick = onManualSync, modifier = Modifier.fillMaxWidth()) {
                 Text("Manual sync")
-            }
-            OutlinedButton(onClick = onBackup, modifier = Modifier.fillMaxWidth()) {
-                Text("Backup data")
             }
             OutlinedButton(onClick = onExport, modifier = Modifier.fillMaxWidth()) {
                 Text("Export transactions")
