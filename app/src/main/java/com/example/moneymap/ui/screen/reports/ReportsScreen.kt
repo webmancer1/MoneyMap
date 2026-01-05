@@ -119,9 +119,15 @@ private fun ReportsContent(
 
         SpendingByCategoryChart(uiState)
 
-        TopCategoriesList(uiState.spendingByCategory)
+        TopCategoriesList(
+            categories = uiState.spendingByCategory,
+            currency = uiState.currency
+        )
 
-        PaymentMethodBreakdown(uiState.paymentMethodSpending)
+        PaymentMethodBreakdown(
+            paymentMethods = uiState.paymentMethodSpending,
+            currency = uiState.currency
+        )
 
         IncomeVsExpenseChart(
             title = "Monthly Activity",
@@ -569,7 +575,10 @@ private fun InsightCard(
 }
 
 @Composable
-private fun TopCategoriesList(categories: List<CategorySpending>) {
+private fun TopCategoriesList(
+    categories: List<CategorySpending>,
+    currency: String
+) {
     if (categories.isEmpty()) return
     
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -580,14 +589,24 @@ private fun TopCategoriesList(categories: List<CategorySpending>) {
         )
         
         categories.take(5).forEach { category ->
-            CategorySpendingItem(category = category)
+            CategorySpendingItem(
+                category = category,
+                currency = currency
+            )
         }
     }
 }
 
 @Composable
-private fun CategorySpendingItem(category: CategorySpending) {
-    val currencyFormat = remember { NumberFormat.getCurrencyInstance(Locale.getDefault()) }
+private fun CategorySpendingItem(
+    category: CategorySpending,
+    currency: String
+) {
+    val currencyFormat = remember(currency) {
+        NumberFormat.getCurrencyInstance(Locale.getDefault()).apply {
+            this.currency = java.util.Currency.getInstance(currency)
+        }
+    }
     
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -625,10 +644,17 @@ private fun CategorySpendingItem(category: CategorySpending) {
 }
 
 @Composable
-private fun PaymentMethodBreakdown(paymentMethods: List<PaymentMethodSpending>) {
+private fun PaymentMethodBreakdown(
+    paymentMethods: List<PaymentMethodSpending>,
+    currency: String
+) {
     if (paymentMethods.isEmpty()) return
     
-    val currencyFormat = remember { NumberFormat.getCurrencyInstance(Locale.getDefault()) }
+    val currencyFormat = remember(currency) {
+        NumberFormat.getCurrencyInstance(Locale.getDefault()).apply {
+            this.currency = java.util.Currency.getInstance(currency)
+        }
+    }
     
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Text(
