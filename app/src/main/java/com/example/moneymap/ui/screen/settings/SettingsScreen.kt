@@ -73,6 +73,15 @@ fun SettingsScreen(
     val coroutineScope = rememberCoroutineScope()
     var showExportDialog by remember { mutableStateOf(false) }
     val context = LocalContext.current
+    // Check for biometric availability
+    // We can do this in a side-effect or just once on composition roughly
+    val biometricHelper = remember { com.example.moneymap.data.security.BiometricHelper(context as androidx.activity.ComponentActivity) }
+    var isBiometricAvailable by remember { mutableStateOf(false) }
+    
+    LaunchedEffect(Unit) {
+        isBiometricAvailable = biometricHelper.isBiometricAvailable()
+    }
+
     val currencyOptions = listOf(
         Currency("KES", "Kenya"),
         Currency("USD", "United States"),
@@ -215,6 +224,7 @@ fun SettingsScreen(
 
             SecuritySection(
                 biometricEnabled = settingsUiState.preferences.biometricLockEnabled,
+                isBiometricAvailable = isBiometricAvailable,
                 hasPin = settingsUiState.preferences.pin != null,
                 onToggleBiometric = settingsViewModel::toggleBiometricLock,
                 onSetupPin = onNavigateToPinSetup,
@@ -383,19 +393,22 @@ private fun NotificationsSection(
 @Composable
 private fun SecuritySection(
     biometricEnabled: Boolean,
+    isBiometricAvailable: Boolean,
     hasPin: Boolean,
     onToggleBiometric: (Boolean) -> Unit,
     onSetupPin: () -> Unit,
     onRemovePin: () -> Unit
 ) {
     SettingsCard(title = "Security") {
-        SettingsToggleRow(
-            title = "Biometric unlock",
-            description = "Require fingerprint or face when launching the app",
-            checked = biometricEnabled,
-            onCheckedChange = onToggleBiometric
-        )
-        Divider(modifier = Modifier.padding(vertical = 12.dp))
+        if (isBiometricAvailable) {
+            SettingsToggleRow(
+                title = "Biometric unlock",
+                description = "Require fingerprint or face when launching the app",
+                checked = biometricEnabled,
+                onCheckedChange = onToggleBiometric
+            )
+            Divider(modifier = Modifier.padding(vertical = 12.dp))
+        }
         
         if (hasPin) {
             OutlinedButton(onClick = onSetupPin, modifier = Modifier.fillMaxWidth()) {
