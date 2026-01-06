@@ -12,7 +12,7 @@ class BiometricHelper(private val activity: ComponentActivity) {
     
     fun isBiometricAvailable(): Boolean {
         val biometricManager = BiometricManager.from(activity)
-        return when (biometricManager.canAuthenticate(BiometricManager.Authenticators.BIOMETRIC_STRONG or BiometricManager.Authenticators.DEVICE_CREDENTIAL)) {
+        return when (biometricManager.canAuthenticate(BiometricManager.Authenticators.BIOMETRIC_STRONG or BiometricManager.Authenticators.BIOMETRIC_WEAK)) {
             BiometricManager.BIOMETRIC_SUCCESS -> true
             else -> false
         }
@@ -35,7 +35,12 @@ class BiometricHelper(private val activity: ComponentActivity) {
             object : BiometricPrompt.AuthenticationCallback() {
                 override fun onAuthenticationError(errorCode: Int, errString: CharSequence) {
                     super.onAuthenticationError(errorCode, errString)
-                    continuation.resume(BiometricResult.Error(errString.toString()))
+                    // Ignore user cancellation to avoid error loop if they want to use PIN
+                    if (errorCode == BiometricPrompt.ERROR_USER_CANCELED || errorCode == BiometricPrompt.ERROR_NEGATIVE_BUTTON) {
+                        continuation.resume(BiometricResult.Failed)
+                    } else {
+                        continuation.resume(BiometricResult.Error(errString.toString()))
+                    }
                 }
 
                 override fun onAuthenticationSucceeded(result: BiometricPrompt.AuthenticationResult) {
@@ -45,7 +50,15 @@ class BiometricHelper(private val activity: ComponentActivity) {
 
                 override fun onAuthenticationFailed() {
                     super.onAuthenticationFailed()
-                    continuation.resume(BiometricResult.Failed)
+                    // This is called for soft failures (e.g. unrecognized fingerprint), do not resume yet, let them try again
+                    // actually, the prompt stays up, so we don't need to do anything here usually.
+                    // But if we want to handle it, we can. For now, let's let the prompt handle retries.
+                    // If we resume here, the coroutine ends.
+                    // BiometricPrompt handles retries internally for failed attempts.
+                    // We only want to resume if it's a hard error or success.
+                    // However, to match previous logic, if we need to notify UI, we might need a callback.
+                    // But suspend function returns once.
+                    // So we DON'T resume on AuthenticationFailed, waiting for Error or Success.
                 }
             }
         )
@@ -54,6 +67,7 @@ class BiometricHelper(private val activity: ComponentActivity) {
             .setTitle(title)
             .setSubtitle(subtitle)
             .setNegativeButtonText(negativeButtonText)
+            .setAllowedAuthenticators(BiometricManager.Authenticators.BIOMETRIC_STRONG or BiometricManager.Authenticators.BIOMETRIC_WEAK)
             .build()
 
         continuation.invokeOnCancellation {
