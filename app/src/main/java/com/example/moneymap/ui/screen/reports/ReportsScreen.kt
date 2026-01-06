@@ -58,6 +58,7 @@ import com.github.mikephil.charting.data.BarDataSet
 import com.github.mikephil.charting.data.BarEntry
 import com.github.mikephil.charting.formatter.IndexAxisValueFormatter
 import android.graphics.Color as AndroidColor
+import androidx.compose.ui.graphics.toArgb
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -278,7 +279,7 @@ private fun SpendingByCategoryChart(uiState: ReportsUiState) {
                                 Text(
                                     text = "${String.format("%.1f", percentage)}%",
                                     style = MaterialTheme.typography.labelSmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    color = MaterialTheme.colorScheme.onSurface // Changed from onSurfaceVariant for better visibility
                                 )
                             }
                         }
@@ -330,18 +331,12 @@ fun PieChart(
             )
             startAngle += sweepAngle
         }
-        
-        // Draw inner circle for donut effect (optional, removed for pure pie)
-        // drawCircle(
-        //     color = Color.White, // Use background color
-        //     radius = radius * 0.5f
-        // )
     }
 }
 
 fun parseColor(colorString: String): androidx.compose.ui.graphics.Color {
     return try {
-        androidx.compose.ui.graphics.Color(android.graphics.Color.parseColor(colorString))
+        androidx.compose.ui.graphics.Color(AndroidColor.parseColor(colorString))
     } catch (e: Exception) {
         androidx.compose.ui.graphics.Color.Gray
     }
@@ -355,6 +350,8 @@ private fun IncomeVsExpenseChart(
     onPreviousClick: (() -> Unit)? = null,
     onNextClick: (() -> Unit)? = null
 ) {
+    val contentColor = MaterialTheme.colorScheme.onSurface.toArgb()
+
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -455,15 +452,22 @@ private fun IncomeVsExpenseChart(
                                 setDrawGridLines(false)
                                 granularity = 1f
                                 valueFormatter = IndexAxisValueFormatter(labels)
+                                textColor = contentColor // Apply theme color
+                                axisLineColor = contentColor // Apply theme color to axis line
                             }
                             
                             axisLeft.apply {
                                 setDrawGridLines(true)
                                 axisMinimum = 0f
+                                textColor = contentColor // Apply theme color
+                                axisLineColor = contentColor // Apply theme color to axis line
                             }
                             axisRight.isEnabled = false
                             
-                            legend.isEnabled = true
+                            legend.apply {
+                                isEnabled = true
+                                textColor = contentColor // Apply theme color to legend
+                            }
                             
                             setPinchZoom(true)
                             setScaleEnabled(true)
@@ -473,11 +477,13 @@ private fun IncomeVsExpenseChart(
                         val incomeDataSet = BarDataSet(incomeEntries, "Income").apply {
                             color = AndroidColor.parseColor("#4CAF50")
                             valueTextSize = 10f
+                            valueTextColor = contentColor // Apply theme color to values
                         }
                         
                         val expenseDataSet = BarDataSet(expenseEntries, "Expense").apply {
                             color = AndroidColor.parseColor("#F44336")
                             valueTextSize = 10f
+                            valueTextColor = contentColor // Apply theme color to values
                         }
 
                         val barData = BarData(incomeDataSet, expenseDataSet)
@@ -485,6 +491,13 @@ private fun IncomeVsExpenseChart(
                         
                         chart.data = barData
                         
+                        // Update colors on update as well to handle theme changes
+                        chart.xAxis.textColor = contentColor
+                        chart.xAxis.axisLineColor = contentColor
+                        chart.axisLeft.textColor = contentColor
+                        chart.axisLeft.axisLineColor = contentColor
+                        chart.legend.textColor = contentColor
+
                         // Group bars logic
                         val groupSpace = 0.2f
                         val barSpace = 0.05f
