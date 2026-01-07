@@ -16,18 +16,18 @@ import android.graphics.drawable.ColorDrawable
 import androidx.compose.ui.graphics.Color
 
 private val DarkColorScheme = darkColorScheme(
-    primary = PrimaryGreen80,
-    onPrimary = OnPrimaryGreen80,
-    primaryContainer = PrimaryGreenContainer80,
-    onPrimaryContainer = OnPrimaryGreenContainer80,
-    secondary = Sage80,
-    onSecondary = OnSage80,
-    secondaryContainer = SageContainer80,
-    onSecondaryContainer = OnSageContainer80,
-    tertiary = Ocean80,
-    onTertiary = OnOcean80,
-    tertiaryContainer = OceanContainer80,
-    onTertiaryContainer = OnOceanContainer80,
+    primary = PrimaryNavy80,
+    onPrimary = OnPrimaryNavy80,
+    primaryContainer = PrimaryNavyContainer80,
+    onPrimaryContainer = OnPrimaryNavyContainer80,
+    secondary = Gold80,
+    onSecondary = OnGold80,
+    secondaryContainer = GoldContainer80,
+    onSecondaryContainer = OnGoldContainer80,
+    tertiary = Slate80,
+    onTertiary = OnSlate80,
+    tertiaryContainer = SlateContainer80,
+    onTertiaryContainer = OnSlateContainer80,
     error = ErrorDark,
     onError = OnErrorDark,
     errorContainer = ErrorContainerDark,
@@ -40,22 +40,22 @@ private val DarkColorScheme = darkColorScheme(
     onSurfaceVariant = OnSurfaceVariantDark,
     outline = OutlineDark,
     outlineVariant = OutlineVariantDark,
-    inversePrimary = PrimaryGreen40
+    inversePrimary = PrimaryNavy40
 )
 
 private val LightColorScheme = lightColorScheme(
-    primary = PrimaryGreen40,
-    onPrimary = OnPrimaryGreen40,
-    primaryContainer = PrimaryGreenContainer40,
-    onPrimaryContainer = OnPrimaryGreenContainer40,
-    secondary = Sage40,
-    onSecondary = OnSage40,
-    secondaryContainer = SageContainer40,
-    onSecondaryContainer = OnSageContainer40,
-    tertiary = Ocean40,
-    onTertiary = OnOcean40,
-    tertiaryContainer = OceanContainer40,
-    onTertiaryContainer = OnOceanContainer40,
+    primary = PrimaryNavy40,
+    onPrimary = OnPrimaryNavy40,
+    primaryContainer = PrimaryNavyContainer40,
+    onPrimaryContainer = OnPrimaryNavyContainer40,
+    secondary = Gold40,
+    onSecondary = OnGold40,
+    secondaryContainer = GoldContainer40,
+    onSecondaryContainer = OnGoldContainer40,
+    tertiary = Slate40,
+    onTertiary = OnSlate40,
+    tertiaryContainer = SlateContainer40,
+    onTertiaryContainer = OnSlateContainer40,
     error = ErrorLight,
     onError = OnErrorLight,
     errorContainer = ErrorContainerLight,
@@ -68,7 +68,7 @@ private val LightColorScheme = lightColorScheme(
     onSurfaceVariant = OnSurfaceVariantLight,
     outline = OutlineLight,
     outlineVariant = OutlineVariantLight,
-    inversePrimary = PrimaryGreen80
+    inversePrimary = PrimaryNavy80
 )
 
 @Composable
