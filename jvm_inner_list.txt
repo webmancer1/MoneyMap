@@ -1,0 +1,4 @@
+total 0
+drwxr-xr-x. 1 root root  6 Nov 24 18:45 .
+drwxr-xr-x. 1 root root 30 Nov 24 18:45 ..
+drwxr-xr-x. 1 root root  8 Jun  9  2025 man
