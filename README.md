@@ -128,15 +128,5 @@ The app follows MVVM (Model-View-ViewModel) architecture:
 - Travel
 - Other
 
-### Income Categories
-- Salary
-- Freelance
-- Business
-- Investment
-- Gift
-- Other
 
-## Contact
-
-For questions or issues, please contact the development team.
 
