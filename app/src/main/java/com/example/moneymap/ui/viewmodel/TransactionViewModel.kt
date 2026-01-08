@@ -29,6 +29,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.catch
 import java.text.SimpleDateFormat
 import java.util.Locale
 import java.util.UUID
@@ -103,6 +104,10 @@ class TransactionViewModel @Inject constructor(
         )
     }
     .flowOn(Dispatchers.Default)
+    .catch { e ->
+        _snackbarMessage.emit("Error loading transactions: ${e.message}")
+        emit(emptyList()) 
+    }
     .stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
