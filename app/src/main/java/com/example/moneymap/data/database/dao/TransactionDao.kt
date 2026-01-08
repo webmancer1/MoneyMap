@@ -28,7 +28,7 @@ interface TransactionDao {
 
     @Query("""
         SELECT * FROM transactions 
-        WHERE (:query IS NULL OR notes LIKE '%' || :query || '%' OR amount LIKE '%' || :query || '%')
+        WHERE (:query IS NULL OR notes LIKE '%' || :query || '%' OR CAST(amount AS TEXT) LIKE '%' || :query || '%')
         AND (:type IS NULL OR type = :type)
         AND (:categoryId IS NULL OR categoryId = :categoryId)
         AND (:paymentMethod IS NULL OR paymentMethod = :paymentMethod)
