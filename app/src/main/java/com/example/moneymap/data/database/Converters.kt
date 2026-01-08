@@ -5,13 +5,13 @@ import com.example.moneymap.data.model.*
 
 class Converters {
     @TypeConverter
-    fun fromTransactionType(value: TransactionType): String {
-        return value.name
+    fun fromTransactionType(value: TransactionType?): String? {
+        return value?.name
     }
 
     @TypeConverter
-    fun toTransactionType(value: String): TransactionType {
-        return TransactionType.valueOf(value)
+    fun toTransactionType(value: String?): TransactionType? {
+        return value?.let { TransactionType.valueOf(it) }
     }
 
     @TypeConverter
