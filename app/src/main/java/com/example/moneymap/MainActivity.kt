@@ -30,11 +30,6 @@ class MainActivity : ComponentActivity() {
         
         // Check if user is already logged in
         val firebaseAuth = FirebaseAuth.getInstance()
-        val startDestination = if (firebaseAuth.currentUser != null) {
-            NavRoutes.HOME
-        } else {
-            NavRoutes.LOGIN
-        }
         
         setContent {
             val settingsViewModel: SettingsViewModel = hiltViewModel()
@@ -43,38 +38,37 @@ class MainActivity : ComponentActivity() {
             MoneyMapTheme(
                 darkTheme = settingsState.preferences.darkTheme
             ) {
-                val navController = rememberNavController()
-
-                Surface(
-                    modifier = Modifier.fillMaxSize(),
-                    color = MaterialTheme.colorScheme.background
-                ) {
-                    // Check for security lock on app start
-                    LaunchedEffect(
-                        firebaseAuth.currentUser,
-                        settingsState.preferences.biometricLockEnabled,
-                        settingsState.preferences.pin,
-                        settingsState.isLoading,
-                        startDestination
+                // Show splash/loading screen while settings are loading
+                if (settingsState.isLoading) {
+                    Surface(
+                        modifier = Modifier.fillMaxSize(),
+                        color = MaterialTheme.colorScheme.background
                     ) {
-                        if (!settingsState.isLoading &&
-                            firebaseAuth.currentUser != null &&
-                            (settingsState.preferences.biometricLockEnabled || settingsState.preferences.pin != null) &&
-                            startDestination == NavRoutes.HOME
-                        ) {
-                            navController.navigate(NavRoutes.APP_LOCK) {
-                                popUpTo(NavRoutes.HOME) { inclusive = true }
-                            }
-                        }
+                        // You could add a logo or loading indicator here
+                    }
+                } else {
+                    val startDestination = if (firebaseAuth.currentUser == null) {
+                        NavRoutes.LOGIN
+                    } else if (settingsState.preferences.biometricLockEnabled || settingsState.preferences.pin != null) {
+                        NavRoutes.APP_LOCK
+                    } else {
+                        NavRoutes.HOME
                     }
 
-                    MoneyMapNavigation(
-                        navController = navController,
-                        startDestination = startDestination
-                    )
+                    val navController = rememberNavController()
+
+                    Surface(
+                        modifier = Modifier.fillMaxSize(),
+                        color = MaterialTheme.colorScheme.background
+                    ) {
+                        MoneyMapNavigation(
+                            navController = navController,
+                            startDestination = startDestination
+                        )
+                    }
                 }
             }
-            }
+        }
     }
 
     private fun testFirebaseConnection() {
