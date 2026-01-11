@@ -61,6 +61,7 @@ class AuthViewModel @Inject constructor(
                 )
                 // Trigger sync after successful login
                 syncManager.triggerOneTimeSync()
+                syncManager.triggerImmediateSync()
             }.onFailure { exception ->
                 _uiState.value = _uiState.value.copy(
                     isLoading = false,
@@ -93,6 +94,7 @@ class AuthViewModel @Inject constructor(
                 )
                 // Trigger sync after successful signup
                 syncManager.triggerOneTimeSync()
+                syncManager.triggerImmediateSync()
             }.onFailure { exception ->
                 _uiState.value = _uiState.value.copy(
                     isLoading = false,
@@ -145,6 +147,7 @@ class AuthViewModel @Inject constructor(
                 )
                 // Trigger sync after successful login
                 syncManager.triggerOneTimeSync()
+                syncManager.triggerImmediateSync()
             }.onFailure { exception ->
                 _uiState.value = _uiState.value.copy(
                     isLoading = false,
