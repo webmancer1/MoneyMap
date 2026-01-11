@@ -35,5 +35,23 @@ class SyncManager @Inject constructor(
     fun cancelPeriodicSync() {
         workManager.cancelUniqueWork("periodic_sync")
     }
+
+    fun triggerOneTimeSync() {
+        val constraints = Constraints.Builder()
+            .setRequiredNetworkType(NetworkType.CONNECTED)
+            .build()
+
+        val syncRequest = OneTimeWorkRequestBuilder<SyncWorker>()
+            .setConstraints(constraints)
+            .setExpedited(OutOfQuotaPolicy.RUN_AS_NON_EXPEDITED_WORK_REQUEST)
+            .addTag("manual_sync")
+            .build()
+
+        workManager.enqueueUniqueWork(
+            "manual_sync",
+            ExistingWorkPolicy.REPLACE,
+            syncRequest
+        )
+    }
 }
 
