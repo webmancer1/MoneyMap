@@ -28,6 +28,7 @@ fun LoginScreen(
     val uiState by viewModel.uiState.collectAsState()
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
+    var passwordVisible by remember { mutableStateOf(false) }
     val context = LocalContext.current
 
     // Configure Google Sign-In
@@ -63,22 +64,45 @@ fun LoginScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(16.dp),
+            .padding(24.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        Text(
-            text = "MoneyMap",
-            style = MaterialTheme.typography.displayMedium
+        Icon(
+            imageVector = Icons.Default.AccountBalanceWallet,
+            contentDescription = null,
+            modifier = Modifier.size(64.dp),
+            tint = MaterialTheme.colorScheme.primary
         )
+        
+        Spacer(modifier = Modifier.height(16.dp))
+
+        Text(
+            text = "Welcome Back",
+            style = MaterialTheme.typography.displaySmall,
+            color = MaterialTheme.colorScheme.onSurface
+        )
+        
+        Text(
+            text = "Sign in to continue to MoneyMap",
+            style = MaterialTheme.typography.bodyLarge,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+
         Spacer(modifier = Modifier.height(32.dp))
         
         OutlinedTextField(
             value = email,
             onValueChange = { email = it },
             label = { Text("Email") },
+            leadingIcon = { Icon(Icons.Default.Email, contentDescription = null) },
             modifier = Modifier.fillMaxWidth(),
-            singleLine = true
+            singleLine = true,
+            shape = MaterialTheme.shapes.medium,
+            keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
+                keyboardType = androidx.compose.ui.text.input.KeyboardType.Email,
+                imeAction = androidx.compose.ui.text.input.ImeAction.Next
+            )
         )
         
         Spacer(modifier = Modifier.height(16.dp))
@@ -87,26 +111,49 @@ fun LoginScreen(
             value = password,
             onValueChange = { password = it },
             label = { Text("Password") },
+            leadingIcon = { Icon(Icons.Default.Lock, contentDescription = null) },
+            trailingIcon = {
+                IconButton(onClick = { passwordVisible = !passwordVisible }) {
+                    Icon(
+                        imageVector = if (passwordVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff,
+                        contentDescription = if (passwordVisible) "Hide password" else "Show password"
+                    )
+                }
+            },
             modifier = Modifier.fillMaxWidth(),
             singleLine = true,
-            visualTransformation = PasswordVisualTransformation()
+            visualTransformation = if (passwordVisible) androidx.compose.ui.text.input.VisualTransformation.None else PasswordVisualTransformation(),
+            shape = MaterialTheme.shapes.medium,
+            keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
+                keyboardType = androidx.compose.ui.text.input.KeyboardType.Password,
+                imeAction = androidx.compose.ui.text.input.ImeAction.Done
+            )
         )
         
         Spacer(modifier = Modifier.height(24.dp))
         
         Button(
             onClick = { viewModel.signIn(email, password) },
-            modifier = Modifier.fillMaxWidth(),
-            enabled = !uiState.isLoading && email.isNotBlank() && password.isNotBlank()
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(50.dp),
+            enabled = !uiState.isLoading && email.isNotBlank() && password.isNotBlank(),
+            shape = MaterialTheme.shapes.medium
         ) {
             if (uiState.isLoading) {
-                LegacyCircularProgressIndicator(modifier = Modifier.size(20.dp))
+                LegacyCircularProgressIndicator(
+                    modifier = Modifier.size(24.dp),
+                    color = MaterialTheme.colorScheme.onPrimary
+                )
             } else {
-                Text("Sign In")
+                Text(
+                    text = "Sign In",
+                    style = MaterialTheme.typography.titleMedium
+                )
             }
         }
         
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(24.dp))
         
         // Divider with "OR"
         Row(
@@ -118,13 +165,13 @@ fun LoginScreen(
             Text(
                 text = "OR",
                 modifier = Modifier.padding(horizontal = 16.dp),
-                style = MaterialTheme.typography.bodySmall,
+                style = MaterialTheme.typography.labelLarge,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
             Divider(modifier = Modifier.weight(1f))
         }
         
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(24.dp))
         
         // Google Sign-In Button
         OutlinedButton(
@@ -132,31 +179,59 @@ fun LoginScreen(
                 val signInIntent = googleSignInClient.signInIntent
                 googleSignInLauncher.launch(signInIntent)
             },
-            modifier = Modifier.fillMaxWidth(),
-            enabled = !uiState.isLoading
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(50.dp),
+            enabled = !uiState.isLoading,
+            shape = MaterialTheme.shapes.medium
         ) {
             Icon(
-                imageVector = Icons.Default.AccountCircle,
+                imageVector = Icons.Default.AccountCircle, // Ideally use Google logo
                 contentDescription = null,
-                modifier = Modifier.size(20.dp)
+                modifier = Modifier.size(24.dp)
             )
-            Spacer(modifier = Modifier.width(8.dp))
-            Text("Sign in with Google")
+            Spacer(modifier = Modifier.width(12.dp))
+            Text(
+                text = "Sign in with Google",
+                style = MaterialTheme.typography.titleMedium
+            )
         }
         
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(24.dp))
         
-        TextButton(onClick = onNavigateToRegister) {
-            Text("Don't have an account? Sign Up")
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center
+        ) {
+            Text(
+                text = "Don't have an account?",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            TextButton(onClick = onNavigateToRegister) {
+                Text(
+                    text = "Sign Up",
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.primary
+                )
+            }
         }
         
         uiState.errorMessage?.let { error ->
             Spacer(modifier = Modifier.height(16.dp))
-            Text(
-                text = error,
-                color = MaterialTheme.colorScheme.error,
-                style = MaterialTheme.typography.bodyMedium
-            )
+            Surface(
+                color = MaterialTheme.colorScheme.errorContainer,
+                shape = MaterialTheme.shapes.small,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text(
+                    text = error,
+                    color = MaterialTheme.colorScheme.onErrorContainer,
+                    style = MaterialTheme.typography.bodyMedium,
+                    modifier = Modifier.padding(16.dp),
+                    textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                )
+            }
         }
     }
 }
