@@ -61,8 +61,12 @@ class AuthViewModel @Inject constructor(
                     errorMessage = null
                 )
                 // Trigger sync after successful login
-                syncManager.triggerOneTimeSync()
-                syncManager.triggerImmediateSync()
+                try {
+                    syncManager.triggerOneTimeSync()
+                    syncManager.triggerImmediateSync()
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                }
             }.onFailure { exception ->
                 _uiState.value = _uiState.value.copy(
                     isLoading = false,
@@ -94,8 +98,12 @@ class AuthViewModel @Inject constructor(
                     errorMessage = null
                 )
                 // Trigger sync after successful signup
-                syncManager.triggerOneTimeSync()
-                syncManager.triggerImmediateSync()
+                try {
+                    syncManager.triggerOneTimeSync()
+                    syncManager.triggerImmediateSync()
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                }
             }.onFailure { exception ->
                 _uiState.value = _uiState.value.copy(
                     isLoading = false,
@@ -156,8 +164,12 @@ class AuthViewModel @Inject constructor(
                     errorMessage = null
                 )
                 // Trigger sync after successful login
-                syncManager.triggerOneTimeSync()
-                syncManager.triggerImmediateSync()
+                try {
+                    syncManager.triggerOneTimeSync()
+                    syncManager.triggerImmediateSync()
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                }
             }.onFailure { exception ->
                 _uiState.value = _uiState.value.copy(
                     isLoading = false,
