@@ -4,6 +4,9 @@ import com.example.moneymap.data.database.dao.TransactionDao
 import com.example.moneymap.data.model.Transaction
 import com.example.moneymap.data.model.TransactionType
 import com.example.moneymap.data.model.SyncStatus
+import com.example.moneymap.data.database.dao.IncomeExpenseSum
+import com.example.moneymap.data.database.dao.CategorySpendingSum
+import com.example.moneymap.data.database.dao.PaymentMethodSpendingSum
 import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -73,6 +76,22 @@ class TransactionRepository @Inject constructor(
 
     suspend fun getPendingSyncTransactions(): List<Transaction> {
         return transactionDao.getTransactionsBySyncStatus(SyncStatus.PENDING)
+    }
+
+    fun getRecentTransactions(limit: Int): Flow<List<Transaction>> {
+        return transactionDao.getRecentTransactions(limit)
+    }
+
+    fun getIncomeExpenseSum(startDate: Long, endDate: Long): Flow<List<IncomeExpenseSum>> {
+        return transactionDao.getIncomeExpenseSum(startDate, endDate)
+    }
+
+    fun getCategorySpendingSum(startDate: Long, endDate: Long): Flow<List<CategorySpendingSum>> {
+        return transactionDao.getCategorySpendingSum(startDate, endDate)
+    }
+
+    fun getPaymentMethodSpendingSum(startDate: Long, endDate: Long): Flow<List<PaymentMethodSpendingSum>> {
+        return transactionDao.getPaymentMethodSpendingSum(startDate, endDate)
     }
 }
 
