@@ -3,13 +3,17 @@ package com.example.moneymap.data.sync
 import androidx.work.*
 import com.example.moneymap.data.sync.SyncWorker
 import java.util.concurrent.TimeUnit
+import com.example.moneymap.di.ApplicationScope
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
 class SyncManager @Inject constructor(
     private val workManager: WorkManager,
-    private val syncService: FirestoreSyncService
+    private val syncService: FirestoreSyncService,
+    @ApplicationScope private val applicationScope: CoroutineScope
 ) {
     fun schedulePeriodicSync() {
         val constraints = Constraints.Builder()
@@ -52,6 +56,17 @@ class SyncManager @Inject constructor(
             ExistingWorkPolicy.REPLACE,
             syncRequest
         )
+    }
+
+    fun triggerImmediateSync() {
+        applicationScope.launch {
+            try {
+                syncService.syncAll()
+            } catch (e: Exception) {
+                // Log error or handle silently as this is background 'immediate' sync
+                e.printStackTrace()
+            }
+        }
     }
 }
 
