@@ -27,6 +27,7 @@ import com.example.moneymap.ui.screen.auth.BiometricLockScreen
 import com.example.moneymap.ui.viewmodel.SettingsViewModel
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.moneymap.ui.screen.auth.LoginScreen
+import com.example.moneymap.ui.screen.auth.ForgotPasswordScreen
 import com.example.moneymap.ui.screen.auth.RegisterScreen
 import com.example.moneymap.ui.screen.home.HomeScreen
 import com.example.moneymap.ui.screen.transaction.AddTransactionScreen
@@ -96,6 +97,16 @@ fun MoneyMapNavigation(
                     },
                     onNavigateToRegister = {
                         navController.navigate(NavRoutes.REGISTER)
+                    },
+                    onNavigateToForgotPassword = {
+                        navController.navigate(NavRoutes.FORGOT_PASSWORD)
+                    }
+                )
+            }
+            composable(NavRoutes.FORGOT_PASSWORD) {
+                ForgotPasswordScreen(
+                    onNavigateBack = {
+                        navController.popBackStack()
                     }
                 )
             }
