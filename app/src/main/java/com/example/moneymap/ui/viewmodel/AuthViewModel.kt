@@ -16,7 +16,8 @@ data class AuthUiState(
     val isLoading: Boolean = false,
     val user: FirebaseUser? = null,
     val errorMessage: String? = null,
-    val isLoggedIn: Boolean = false
+    val isLoggedIn: Boolean = false,
+    val resetPasswordSuccess: Boolean = false
 )
 
 @HiltViewModel
@@ -114,16 +115,22 @@ class AuthViewModel @Inject constructor(
 
     fun resetPassword(email: String) {
         viewModelScope.launch {
-            _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null)
+            _uiState.value = _uiState.value.copy(
+                isLoading = true, 
+                errorMessage = null,
+                resetPasswordSuccess = false
+            )
             val result = authRepository.sendPasswordResetEmail(email)
             result.onSuccess {
                 _uiState.value = _uiState.value.copy(
                     isLoading = false,
+                    resetPasswordSuccess = true,
                     errorMessage = "Password reset email sent"
                 )
             }.onFailure { exception ->
                 _uiState.value = _uiState.value.copy(
                     isLoading = false,
+                    resetPasswordSuccess = false,
                     errorMessage = exception.message ?: "Failed to send password reset email"
                 )
             }
@@ -131,7 +138,10 @@ class AuthViewModel @Inject constructor(
     }
 
     fun clearError() {
-        _uiState.value = _uiState.value.copy(errorMessage = null)
+        _uiState.value = _uiState.value.copy(
+            errorMessage = null,
+            resetPasswordSuccess = false
+        )
     }
 
     fun signInWithGoogle(idToken: String) {
