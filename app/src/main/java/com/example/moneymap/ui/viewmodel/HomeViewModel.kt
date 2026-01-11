@@ -39,8 +39,7 @@ class HomeViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(HomeUiState())
     val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
 
-    val recentTransactions = transactionRepository.getAllTransactions()
-        .map { list -> list.sortedByDescending { it.date } }
+    val recentTransactions = transactionRepository.getRecentTransactions(5)
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),
@@ -89,22 +88,23 @@ class HomeViewModel @Inject constructor(
 
     private fun observeMonthlySummary() {
         val (startDate, endDate) = currentMonthRange()
-        transactionRepository.getTransactionsByDateRange(startDate, endDate)
-            .combine(settingsRepository.settingsFlow.map { it.currency }.distinctUntilChanged()) { transactions, currency ->
-                Pair(transactions, currency)
+        transactionRepository.getIncomeExpenseSum(startDate, endDate)
+            .combine(settingsRepository.settingsFlow.map { it.currency }.distinctUntilChanged()) { sums, displayCurrency ->
+                Pair(sums, displayCurrency)
             }
             .onStart { _uiState.value = _uiState.value.copy(isLoading = true) }
-            .onEach { (transactions, displayCurrency) ->
-                val income = transactions
-                    .filter { it.type == TransactionType.INCOME }
-                    .sumOf { tx ->
-                        currencyRepository.convert(tx.amount, tx.currency, displayCurrency)
+            .onEach { (sums, displayCurrency) ->
+                var income = 0.0
+                var expenses = 0.0
+
+                sums.forEach { sum ->
+                    val convertedAmount = currencyRepository.convert(sum.total, sum.currency, displayCurrency)
+                    if (sum.type == TransactionType.INCOME) {
+                        income += convertedAmount
+                    } else {
+                        expenses += convertedAmount
                     }
-                val expenses = transactions
-                    .filter { it.type == TransactionType.EXPENSE }
-                    .sumOf { tx ->
-                        currencyRepository.convert(tx.amount, tx.currency, displayCurrency)
-                    }
+                }
 
                 _uiState.value = _uiState.value.copy(
                     totalIncome = income,
