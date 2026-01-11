@@ -46,6 +46,7 @@ fun HomeScreen(
             currency = java.util.Currency.getInstance(uiState.currencyCode)
         }
     }
+    val dateFormat = androidx.compose.runtime.remember { java.text.SimpleDateFormat("MMM dd, yyyy", Locale.getDefault()) }
 
     Scaffold(
         topBar = {
@@ -254,11 +255,12 @@ fun HomeScreen(
                     )
                 }
             } else {
-                items(recentTransactions.take(10)) { transaction ->
+                items(recentTransactions.take(10), key = { it.id }) { transaction ->
                     TransactionItem(
                         transaction = transaction,
                         displayCurrency = uiState.currencyCode,
-                        convertAmount = viewModel::convertAmount
+                        convertAmount = viewModel::convertAmount,
+                        dateFormat = dateFormat
                     )
                 }
             }
@@ -270,7 +272,8 @@ fun HomeScreen(
 fun TransactionItem(
     transaction: com.example.moneymap.data.model.Transaction,
     displayCurrency: String,
-    convertAmount: (Double, String, String) -> Double
+    convertAmount: (Double, String, String) -> Double,
+    dateFormat: java.text.SimpleDateFormat
 ) {
     val currencyFormat = androidx.compose.runtime.remember(displayCurrency) {
         NumberFormat.getCurrencyInstance(Locale.getDefault()).apply {
@@ -297,8 +300,7 @@ fun TransactionItem(
                     style = MaterialTheme.typography.titleMedium
                 )
                 Text(
-                    text = java.text.SimpleDateFormat("MMM dd, yyyy", Locale.getDefault())
-                        .format(java.util.Date(transaction.date)),
+                    text = dateFormat.format(java.util.Date(transaction.date)),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
