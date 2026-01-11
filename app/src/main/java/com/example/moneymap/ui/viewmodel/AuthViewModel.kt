@@ -6,6 +6,8 @@ import com.example.moneymap.data.repository.AuthRepository
 import com.example.moneymap.data.sync.SyncManager
 import com.google.firebase.auth.FirebaseUser
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -61,11 +63,14 @@ class AuthViewModel @Inject constructor(
                     errorMessage = null
                 )
                 // Trigger sync after successful login
-                try {
-                    syncManager.triggerOneTimeSync()
-                    syncManager.triggerImmediateSync()
-                } catch (e: Exception) {
-                    e.printStackTrace()
+                viewModelScope.launch(Dispatchers.IO) {
+                    delay(500) // Small delay to allow UI navigation to complete
+                    try {
+                        syncManager.triggerOneTimeSync()
+                        syncManager.triggerImmediateSync()
+                    } catch (e: Exception) {
+                        e.printStackTrace()
+                    }
                 }
             }.onFailure { exception ->
                 _uiState.value = _uiState.value.copy(
@@ -98,11 +103,14 @@ class AuthViewModel @Inject constructor(
                     errorMessage = null
                 )
                 // Trigger sync after successful signup
-                try {
-                    syncManager.triggerOneTimeSync()
-                    syncManager.triggerImmediateSync()
-                } catch (e: Exception) {
-                    e.printStackTrace()
+                viewModelScope.launch(Dispatchers.IO) {
+                    delay(500) // Small delay to allow UI navigation to complete
+                    try {
+                        syncManager.triggerOneTimeSync()
+                        syncManager.triggerImmediateSync()
+                    } catch (e: Exception) {
+                        e.printStackTrace()
+                    }
                 }
             }.onFailure { exception ->
                 _uiState.value = _uiState.value.copy(
@@ -164,11 +172,14 @@ class AuthViewModel @Inject constructor(
                     errorMessage = null
                 )
                 // Trigger sync after successful login
-                try {
-                    syncManager.triggerOneTimeSync()
-                    syncManager.triggerImmediateSync()
-                } catch (e: Exception) {
-                    e.printStackTrace()
+                viewModelScope.launch(Dispatchers.IO) {
+                    delay(500) // Small delay to allow UI navigation to complete
+                    try {
+                        syncManager.triggerOneTimeSync()
+                        syncManager.triggerImmediateSync()
+                    } catch (e: Exception) {
+                        e.printStackTrace()
+                    }
                 }
             }.onFailure { exception ->
                 _uiState.value = _uiState.value.copy(
