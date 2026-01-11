@@ -73,5 +73,42 @@ interface TransactionDao {
 
     @Query("DELETE FROM transactions")
     suspend fun deleteAllTransactions()
+    @Query("SELECT * FROM transactions ORDER BY date DESC LIMIT :limit")
+    fun getRecentTransactions(limit: Int): Flow<List<Transaction>>
+
+    @Query("SELECT type, currency, SUM(amount) as total FROM transactions WHERE date >= :startDate AND date <= :endDate GROUP BY type, currency")
+    fun getIncomeExpenseSum(startDate: Long, endDate: Long): Flow<List<IncomeExpenseSum>>
+
+    // Helper class for the aggregation result. 
+    // Since this is an interface, we can't define the data class inside easily without it being a valid return type.
+    // However, Room can return POJOs. 
+    // I will add the POJO classes in a separate file or at the bottom of this file if appropriate, 
+    // but for now I'll use a Map or a specific DTO.
+    // Let's stick to returning specific DTOs. I need to define them.
+    @Query("SELECT categoryId, currency, SUM(amount) as totalAmount, COUNT(*) as transactionCount FROM transactions WHERE type = 'EXPENSE' AND date >= :startDate AND date <= :endDate GROUP BY categoryId, currency ORDER BY totalAmount DESC")
+    fun getCategorySpendingSum(startDate: Long, endDate: Long): Flow<List<CategorySpendingSum>>
+
+    @Query("SELECT paymentMethod, currency, SUM(amount) as totalAmount, COUNT(*) as transactionCount FROM transactions WHERE type = 'EXPENSE' AND paymentMethod IS NOT NULL AND date >= :startDate AND date <= :endDate GROUP BY paymentMethod, currency ORDER BY totalAmount DESC")
+    fun getPaymentMethodSpendingSum(startDate: Long, endDate: Long): Flow<List<PaymentMethodSpendingSum>>
 }
+
+data class IncomeExpenseSum(
+    val type: TransactionType,
+    val currency: String,
+    val total: Double
+)
+
+data class CategorySpendingSum(
+    val categoryId: String,
+    val currency: String,
+    val totalAmount: Double,
+    val transactionCount: Int
+)
+
+data class PaymentMethodSpendingSum(
+    val paymentMethod: com.example.moneymap.data.model.PaymentMethod,
+    val currency: String,
+    val totalAmount: Double,
+    val transactionCount: Int
+)
 
