@@ -9,10 +9,7 @@ A comprehensive personal finance management mobile application built with Kotlin
 -  Transaction Management (Add, Edit, Delete)
 -  Category Management (Default categories)
 -  Home Dashboard with balance and recent transactions
--  Navigation with Bottom Navigation Bar
--  Material Design 3 UI
 -  Room Database for local storage
--  MVVM Architecture with Hilt Dependency Injection
 -  Budget Planning and Alerts
 -  Debt Tracker
 -  Recurring Transactions
@@ -23,10 +20,6 @@ A comprehensive personal finance management mobile application built with Kotlin
 -  Biometric Authentication
 -  Export Functionality (CSV, PDF)
 -  Firebase Firestore Sync
-
-### Planned Features
--  Receipt Upload
-  
 
 ## Technical Stack
 
