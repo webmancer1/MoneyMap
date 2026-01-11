@@ -3,6 +3,7 @@ package com.example.moneymap.navigation
 object NavRoutes {
     const val LOGIN = "login"
     const val REGISTER = "register"
+    const val FORGOT_PASSWORD = "forgot_password"
     const val BIOMETRIC_LOCK = "biometric_lock"
     const val HOME = "home"
     const val TRANSACTIONS = "transactions"
