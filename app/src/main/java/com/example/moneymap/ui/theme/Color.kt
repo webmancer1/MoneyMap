@@ -3,62 +3,61 @@ package com.example.moneymap.ui.theme
 import androidx.compose.ui.graphics.Color
 
 // Light scheme
-// Light scheme
-val PrimaryNavy40 = Color(0xFF1B3B6F)
-val OnPrimaryNavy40 = Color(0xFFFFFFFF)
-val PrimaryNavyContainer40 = Color(0xFFD3E3FF)
-val OnPrimaryNavyContainer40 = Color(0xFF001C3A)
+val PrimaryTeal40 = Color(0xFF006D63)
+val OnPrimaryTeal40 = Color(0xFFFFFFFF)
+val PrimaryTealContainer40 = Color(0xFF74F8E5)
+val OnPrimaryTealContainer40 = Color(0xFF00201C)
 
-val Gold40 = Color(0xFF755B00)
-val OnGold40 = Color(0xFFFFFFFF)
-val GoldContainer40 = Color(0xFFFFDF9E)
-val OnGoldContainer40 = Color(0xFF251A00)
+val SecondaryTerracotta40 = Color(0xFF9C4328)
+val OnSecondaryTerracotta40 = Color(0xFFFFFFFF)
+val SecondaryTerracottaContainer40 = Color(0xFFFFDBD0)
+val OnSecondaryTerracottaContainer40 = Color(0xFF3B0900)
 
-val Slate40 = Color(0xFF525F70)
-val OnSlate40 = Color(0xFFFFFFFF)
-val SlateContainer40 = Color(0xFFD6E3F7)
-val OnSlateContainer40 = Color(0xFF0F1C2B)
+val TertiarySand40 = Color(0xFF7B5900)
+val OnTertiarySand40 = Color(0xFFFFFFFF)
+val TertiarySandContainer40 = Color(0xFFFFDEA4)
+val OnTertiarySandContainer40 = Color(0xFF261900)
 
 val ErrorLight = Color(0xFFBA1A1A)
 val OnErrorLight = Color(0xFFFFFFFF)
 val ErrorContainerLight = Color(0xFFFFDAD6)
 val OnErrorContainerLight = Color(0xFF410002)
 
-val BackgroundLight = Color(0xFFFDFBFF)
-val OnBackgroundLight = Color(0xFF1A1C1E)
+val BackgroundLight = Color(0xFFFBFDF9)
+val OnBackgroundLight = Color(0xFF191C1B)
 val SurfaceLight = BackgroundLight
 val OnSurfaceLight = OnBackgroundLight
-val SurfaceVariantLight = Color(0xFFE0E2EC)
-val OnSurfaceVariantLight = Color(0xFF44474E)
-val OutlineLight = Color(0xFF74777F)
-val OutlineVariantLight = Color(0xFFC4C6D0)
+val SurfaceVariantLight = Color(0xFFDBE5E0)
+val OnSurfaceVariantLight = Color(0xFF3F4946)
+val OutlineLight = Color(0xFF6F7976)
+val OutlineVariantLight = Color(0xFFBFC9C4)
 
 // Dark scheme
-val PrimaryNavy80 = Color(0xFFAEC6FF)
-val OnPrimaryNavy80 = Color(0xFF002E5C)
-val PrimaryNavyContainer80 = Color(0xFF004480)
-val OnPrimaryNavyContainer80 = Color(0xFFD3E3FF)
+val PrimaryTeal80 = Color(0xFF53DBC9)
+val OnPrimaryTeal80 = Color(0xFF003731)
+val PrimaryTealContainer80 = Color(0xFF005049)
+val OnPrimaryTealContainer80 = Color(0xFF74F8E5)
 
-val Gold80 = Color(0xFFF3C53C)
-val OnGold80 = Color(0xFF3E2F00)
-val GoldContainer80 = Color(0xFF594400)
-val OnGoldContainer80 = Color(0xFFFFDF9E)
+val SecondaryTerracotta80 = Color(0xFFFFB59E)
+val OnSecondaryTerracotta80 = Color(0xFF5F1600)
+val SecondaryTerracottaContainer80 = Color(0xFF7E2C14)
+val OnSecondaryTerracottaContainer80 = Color(0xFFFFDBD0)
 
-val Slate80 = Color(0xFFBAC8DB)
-val OnSlate80 = Color(0xFF243140)
-val SlateContainer80 = Color(0xFF3B4858)
-val OnSlateContainer80 = Color(0xFFD6E3F7)
+val TertiarySand80 = Color(0xFFF9BD2E)
+val OnTertiarySand80 = Color(0xFF412D00)
+val TertiarySandContainer80 = Color(0xFF5D4200)
+val OnTertiarySandContainer80 = Color(0xFFFFDEA4)
 
 val ErrorDark = Color(0xFFFFB4AB)
 val OnErrorDark = Color(0xFF690005)
 val ErrorContainerDark = Color(0xFF93000A)
 val OnErrorContainerDark = Color(0xFFFFDAD6)
 
-val BackgroundDark = Color(0xFF1A1C1E)
-val OnBackgroundDark = Color(0xFFE3E2E6)
+val BackgroundDark = Color(0xFF191C1B)
+val OnBackgroundDark = Color(0xFFE1E3DF)
 val SurfaceDark = BackgroundDark
 val OnSurfaceDark = OnBackgroundDark
-val SurfaceVariantDark = Color(0xFF44474E)
-val OnSurfaceVariantDark = Color(0xFFC4C6D0)
-val OutlineDark = Color(0xFF8E9099)
+val SurfaceVariantDark = Color(0xFF3F4946)
+val OnSurfaceVariantDark = Color(0xFFBFC9C4)
+val OutlineDark = Color(0xFF89938F)
 val OutlineVariantDark = SurfaceVariantDark
