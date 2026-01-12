@@ -10,29 +10,34 @@ import com.example.moneymap.data.database.dao.PaymentMethodSpendingSum
 import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
 import javax.inject.Singleton
+import com.google.firebase.auth.FirebaseAuth
 
 @Singleton
 class TransactionRepository @Inject constructor(
-    private val transactionDao: TransactionDao
+    private val transactionDao: TransactionDao,
+    private val firebaseAuth: FirebaseAuth
 ) {
+    private val currentUserId: String
+        get() = firebaseAuth.currentUser?.uid ?: ""
+
     fun getAllTransactions(): Flow<List<Transaction>> {
-        return transactionDao.getAllTransactions()
+        return transactionDao.getAllTransactions(currentUserId)
     }
 
     suspend fun getTransactionById(id: String): Transaction? {
-        return transactionDao.getTransactionById(id)
+        return transactionDao.getTransactionById(currentUserId, id)
     }
 
     fun getTransactionsByType(type: TransactionType): Flow<List<Transaction>> {
-        return transactionDao.getTransactionsByType(type)
+        return transactionDao.getTransactionsByType(currentUserId, type)
     }
 
     fun getTransactionsByCategory(categoryId: String): Flow<List<Transaction>> {
-        return transactionDao.getTransactionsByCategory(categoryId)
+        return transactionDao.getTransactionsByCategory(currentUserId, categoryId)
     }
 
     fun getTransactionsByDateRange(startDate: Long, endDate: Long): Flow<List<Transaction>> {
-        return transactionDao.getTransactionsByDateRange(startDate, endDate)
+        return transactionDao.getTransactionsByDateRange(currentUserId, startDate, endDate)
     }
 
     fun getFilteredTransactions(
@@ -46,7 +51,7 @@ class TransactionRepository @Inject constructor(
         maxAmount: Double? = null
     ): Flow<List<Transaction>> {
         return transactionDao.getFilteredTransactions(
-            query, type, categoryId, paymentMethod, startDate, endDate, minAmount, maxAmount
+            currentUserId, query, type, categoryId, paymentMethod, startDate, endDate, minAmount, maxAmount
         )
     }
 
@@ -55,11 +60,11 @@ class TransactionRepository @Inject constructor(
         startDate: Long,
         endDate: Long
     ): Double {
-        return transactionDao.getTotalAmountByTypeAndDateRange(type, startDate, endDate) ?: 0.0
+        return transactionDao.getTotalAmountByTypeAndDateRange(currentUserId, type, startDate, endDate) ?: 0.0
     }
 
     suspend fun insertTransaction(transaction: Transaction) {
-        transactionDao.insertTransaction(transaction)
+        transactionDao.insertTransaction(transaction.copy(userId = currentUserId))
     }
 
     suspend fun updateTransaction(transaction: Transaction) {
@@ -71,7 +76,7 @@ class TransactionRepository @Inject constructor(
     }
 
     suspend fun deleteTransactionById(id: String) {
-        transactionDao.deleteTransactionById(id)
+        transactionDao.deleteTransactionById(currentUserId, id)
     }
 
     suspend fun getPendingSyncTransactions(): List<Transaction> {
@@ -79,19 +84,19 @@ class TransactionRepository @Inject constructor(
     }
 
     fun getRecentTransactions(limit: Int): Flow<List<Transaction>> {
-        return transactionDao.getRecentTransactions(limit)
+        return transactionDao.getRecentTransactions(currentUserId, limit)
     }
 
     fun getIncomeExpenseSum(startDate: Long, endDate: Long): Flow<List<IncomeExpenseSum>> {
-        return transactionDao.getIncomeExpenseSum(startDate, endDate)
+        return transactionDao.getIncomeExpenseSum(currentUserId, startDate, endDate)
     }
 
     fun getCategorySpendingSum(startDate: Long, endDate: Long): Flow<List<CategorySpendingSum>> {
-        return transactionDao.getCategorySpendingSum(startDate, endDate)
+        return transactionDao.getCategorySpendingSum(currentUserId, startDate, endDate)
     }
 
     fun getPaymentMethodSpendingSum(startDate: Long, endDate: Long): Flow<List<PaymentMethodSpendingSum>> {
-        return transactionDao.getPaymentMethodSpendingSum(startDate, endDate)
+        return transactionDao.getPaymentMethodSpendingSum(currentUserId, startDate, endDate)
     }
 }
 

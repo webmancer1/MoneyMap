@@ -8,6 +8,7 @@ import java.util.UUID
 data class Transaction(
     @PrimaryKey
     val id: String = UUID.randomUUID().toString(),
+    val userId: String = "",
     val type: TransactionType = TransactionType.EXPENSE,
     val amount: Double = 0.0,
     val currency: String = "KES",

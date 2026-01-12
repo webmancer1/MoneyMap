@@ -106,22 +106,15 @@ class AuthViewModel @Inject constructor(
                 _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null)
                 val result = authRepository.signUpWithEmailAndPassword(email, password)
                 result.onSuccess { user ->
+                    // Immediate sign out to enforce manual login
+                    authRepository.signOut()
                     _uiState.value = _uiState.value.copy(
                         isLoading = false,
-                        user = user,
-                        isLoggedIn = true,
+                        user = null,
+                        isLoggedIn = true, // Temporarily true to trigger success callback in UI
                         errorMessage = null
                     )
-                    // Trigger sync after successful signup
-                    viewModelScope.launch(Dispatchers.IO) {
-                        delay(500) // Small delay to allow UI navigation to complete
-                        try {
-                            syncManager.triggerOneTimeSync()
-                            syncManager.triggerImmediateSync()
-                        } catch (e: Exception) {
-                            e.printStackTrace()
-                        }
-                    }
+                    // We don't trigger sync here anymore as we want them to login first
                 }.onFailure { exception ->
                     _uiState.value = _uiState.value.copy(
                         isLoading = false,

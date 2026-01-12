@@ -8,6 +8,7 @@ import java.util.UUID
 data class Goal(
     @PrimaryKey
     val id: String = UUID.randomUUID().toString(),
+    val userId: String = "",
     val name: String = "",
     val targetAmount: Double = 0.0,
     val savedAmount: Double = 0.0,

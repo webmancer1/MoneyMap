@@ -6,20 +6,25 @@ import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
 import javax.inject.Singleton
 
+import com.google.firebase.auth.FirebaseAuth
+
 @Singleton
 class GoalRepository @Inject constructor(
-    private val goalDao: GoalDao
+    private val goalDao: GoalDao,
+    private val firebaseAuth: FirebaseAuth
 ) {
+    private val currentUserId: String
+        get() = firebaseAuth.currentUser?.uid ?: ""
     fun getAllGoals(): Flow<List<Goal>> {
-        return goalDao.getAllGoals()
+        return goalDao.getAllGoals(currentUserId)
     }
 
     suspend fun getGoalById(id: String): Goal? {
-        return goalDao.getGoalById(id)
+        return goalDao.getGoalById(currentUserId, id)
     }
 
     suspend fun insertGoal(goal: Goal) {
-        goalDao.insertGoal(goal)
+        goalDao.insertGoal(goal.copy(userId = currentUserId))
     }
 
     suspend fun updateGoal(goal: Goal) {
