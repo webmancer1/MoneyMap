@@ -8,6 +8,7 @@ import java.util.UUID
 data class Budget(
     @PrimaryKey
     val id: String = UUID.randomUUID().toString(),
+    val userId: String = "",
     val categoryId: String = "",
     val amount: Double = 0.0,
     val period: BudgetPeriod = BudgetPeriod.MONTHLY,
