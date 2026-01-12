@@ -113,7 +113,7 @@ fun MoneyMapNavigation(
             composable(NavRoutes.REGISTER) {
                 RegisterScreen(
                     onRegisterSuccess = {
-                        navController.navigate(NavRoutes.HOME) {
+                        navController.navigate(NavRoutes.LOGIN) {
                             popUpTo(NavRoutes.REGISTER) { inclusive = true }
                         }
                     },

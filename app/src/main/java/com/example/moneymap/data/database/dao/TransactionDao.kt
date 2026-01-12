@@ -8,27 +8,28 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface TransactionDao {
-    @Query("SELECT * FROM transactions ORDER BY date DESC")
-    fun getAllTransactions(): Flow<List<Transaction>>
+    @Query("SELECT * FROM transactions WHERE userId = :userId ORDER BY date DESC")
+    fun getAllTransactions(userId: String): Flow<List<Transaction>>
 
-    @Query("SELECT * FROM transactions WHERE id = :id")
-    suspend fun getTransactionById(id: String): Transaction?
+    @Query("SELECT * FROM transactions WHERE id = :id AND userId = :userId")
+    suspend fun getTransactionById(userId: String, id: String): Transaction?
 
-    @Query("SELECT * FROM transactions WHERE type = :type ORDER BY date DESC")
-    fun getTransactionsByType(type: TransactionType): Flow<List<Transaction>>
+    @Query("SELECT * FROM transactions WHERE userId = :userId AND type = :type ORDER BY date DESC")
+    fun getTransactionsByType(userId: String, type: TransactionType): Flow<List<Transaction>>
 
-    @Query("SELECT * FROM transactions WHERE categoryId = :categoryId ORDER BY date DESC")
-    fun getTransactionsByCategory(categoryId: String): Flow<List<Transaction>>
+    @Query("SELECT * FROM transactions WHERE userId = :userId AND categoryId = :categoryId ORDER BY date DESC")
+    fun getTransactionsByCategory(userId: String, categoryId: String): Flow<List<Transaction>>
 
-    @Query("SELECT * FROM transactions WHERE date >= :startDate AND date <= :endDate ORDER BY date DESC")
-    fun getTransactionsByDateRange(startDate: Long, endDate: Long): Flow<List<Transaction>>
+    @Query("SELECT * FROM transactions WHERE userId = :userId AND date >= :startDate AND date <= :endDate ORDER BY date DESC")
+    fun getTransactionsByDateRange(userId: String, startDate: Long, endDate: Long): Flow<List<Transaction>>
 
     @Query("SELECT * FROM transactions WHERE syncStatus = :status")
     suspend fun getTransactionsBySyncStatus(status: SyncStatus): List<Transaction>
 
     @Query("""
         SELECT * FROM transactions 
-        WHERE (:query IS NULL OR notes LIKE '%' || :query || '%' OR CAST(amount AS TEXT) LIKE '%' || :query || '%')
+        WHERE userId = :userId
+        AND (:query IS NULL OR notes LIKE '%' || :query || '%' OR CAST(amount AS TEXT) LIKE '%' || :query || '%')
         AND (:type IS NULL OR type = :type)
         AND (:categoryId IS NULL OR categoryId = :categoryId)
         AND (:paymentMethod IS NULL OR paymentMethod = :paymentMethod)
@@ -39,6 +40,7 @@ interface TransactionDao {
         ORDER BY date DESC
     """)
     fun getFilteredTransactions(
+        userId: String,
         query: String?,
         type: TransactionType?,
         categoryId: String?,
@@ -49,8 +51,9 @@ interface TransactionDao {
         maxAmount: Double?
     ): Flow<List<Transaction>>
 
-    @Query("SELECT SUM(amount) FROM transactions WHERE type = :type AND date >= :startDate AND date <= :endDate")
+    @Query("SELECT SUM(amount) FROM transactions WHERE userId = :userId AND type = :type AND date >= :startDate AND date <= :endDate")
     suspend fun getTotalAmountByTypeAndDateRange(
+        userId: String,
         type: TransactionType,
         startDate: Long,
         endDate: Long
@@ -68,16 +71,16 @@ interface TransactionDao {
     @Delete
     suspend fun deleteTransaction(transaction: Transaction)
 
-    @Query("DELETE FROM transactions WHERE id = :id")
-    suspend fun deleteTransactionById(id: String)
+    @Query("DELETE FROM transactions WHERE id = :id AND userId = :userId")
+    suspend fun deleteTransactionById(userId: String, id: String)
 
-    @Query("DELETE FROM transactions")
-    suspend fun deleteAllTransactions()
-    @Query("SELECT * FROM transactions ORDER BY date DESC LIMIT :limit")
-    fun getRecentTransactions(limit: Int): Flow<List<Transaction>>
+    @Query("DELETE FROM transactions WHERE userId = :userId")
+    suspend fun deleteAllTransactions(userId: String)
+    @Query("SELECT * FROM transactions WHERE userId = :userId ORDER BY date DESC LIMIT :limit")
+    fun getRecentTransactions(userId: String, limit: Int): Flow<List<Transaction>>
 
-    @Query("SELECT type, currency, SUM(amount) as total FROM transactions WHERE date >= :startDate AND date <= :endDate GROUP BY type, currency")
-    fun getIncomeExpenseSum(startDate: Long, endDate: Long): Flow<List<IncomeExpenseSum>>
+    @Query("SELECT type, currency, SUM(amount) as total FROM transactions WHERE userId = :userId AND date >= :startDate AND date <= :endDate GROUP BY type, currency")
+    fun getIncomeExpenseSum(userId: String, startDate: Long, endDate: Long): Flow<List<IncomeExpenseSum>>
 
     // Helper class for the aggregation result. 
     // Since this is an interface, we can't define the data class inside easily without it being a valid return type.
@@ -85,11 +88,11 @@ interface TransactionDao {
     // I will add the POJO classes in a separate file or at the bottom of this file if appropriate, 
     // but for now I'll use a Map or a specific DTO.
     // Let's stick to returning specific DTOs. I need to define them.
-    @Query("SELECT categoryId, currency, SUM(amount) as totalAmount, COUNT(*) as transactionCount FROM transactions WHERE type = 'EXPENSE' AND date >= :startDate AND date <= :endDate GROUP BY categoryId, currency ORDER BY totalAmount DESC")
-    fun getCategorySpendingSum(startDate: Long, endDate: Long): Flow<List<CategorySpendingSum>>
+    @Query("SELECT categoryId, currency, SUM(amount) as totalAmount, COUNT(*) as transactionCount FROM transactions WHERE userId = :userId AND type = 'EXPENSE' AND date >= :startDate AND date <= :endDate GROUP BY categoryId, currency ORDER BY totalAmount DESC")
+    fun getCategorySpendingSum(userId: String, startDate: Long, endDate: Long): Flow<List<CategorySpendingSum>>
 
-    @Query("SELECT paymentMethod, currency, SUM(amount) as totalAmount, COUNT(*) as transactionCount FROM transactions WHERE type = 'EXPENSE' AND paymentMethod IS NOT NULL AND date >= :startDate AND date <= :endDate GROUP BY paymentMethod, currency ORDER BY totalAmount DESC")
-    fun getPaymentMethodSpendingSum(startDate: Long, endDate: Long): Flow<List<PaymentMethodSpendingSum>>
+    @Query("SELECT paymentMethod, currency, SUM(amount) as totalAmount, COUNT(*) as transactionCount FROM transactions WHERE userId = :userId AND type = 'EXPENSE' AND paymentMethod IS NOT NULL AND date >= :startDate AND date <= :endDate GROUP BY paymentMethod, currency ORDER BY totalAmount DESC")
+    fun getPaymentMethodSpendingSum(userId: String, startDate: Long, endDate: Long): Flow<List<PaymentMethodSpendingSum>>
 }
 
 data class IncomeExpenseSum(

@@ -21,7 +21,8 @@ object DatabaseModule {
             context,
             MoneyMapDatabase::class.java,
             "money_map_database"
-        ).build()
+        ).fallbackToDestructiveMigration()
+        .build()
     }
 
     @Provides
