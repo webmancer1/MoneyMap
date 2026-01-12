@@ -24,7 +24,12 @@ class AuthRepository @Inject constructor(
     suspend fun signInWithEmailAndPassword(email: String, password: String): Result<FirebaseUser> {
         return try {
             val result = firebaseAuth.signInWithEmailAndPassword(email, password).await()
-            Result.success(result.user!!)
+            val user = result.user
+            if (user != null) {
+                Result.success(user)
+            } else {
+                Result.failure(Exception("Sign in succeeded but user is null"))
+            }
         } catch (e: Exception) {
             Result.failure(e)
         }
@@ -36,7 +41,12 @@ class AuthRepository @Inject constructor(
     ): Result<FirebaseUser> {
         return try {
             val result = firebaseAuth.createUserWithEmailAndPassword(email, password).await()
-            Result.success(result.user!!)
+            val user = result.user
+            if (user != null) {
+                Result.success(user)
+            } else {
+                Result.failure(Exception("Sign up succeeded but user is null"))
+            }
         } catch (e: Exception) {
             Result.failure(e)
         }
@@ -68,7 +78,12 @@ class AuthRepository @Inject constructor(
         return try {
             val credential = GoogleAuthProvider.getCredential(idToken, null)
             val result = firebaseAuth.signInWithCredential(credential).await()
-            Result.success(result.user!!)
+            val user = result.user
+            if (user != null) {
+                Result.success(user)
+            } else {
+                Result.failure(Exception("Google sign in succeeded but user is null"))
+            }
         } catch (e: Exception) {
             Result.failure(e)
         }

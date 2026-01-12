@@ -53,31 +53,40 @@ class AuthViewModel @Inject constructor(
         }
 
         viewModelScope.launch {
-            _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null)
-            val result = authRepository.signInWithEmailAndPassword(email, password)
-            result.onSuccess { user ->
-                _uiState.value = _uiState.value.copy(
-                    isLoading = false,
-                    user = user,
-                    isLoggedIn = true,
-                    errorMessage = null
-                )
-                // Trigger sync after successful login
-                viewModelScope.launch(Dispatchers.IO) {
-                    delay(500) // Small delay to allow UI navigation to complete
-                    try {
-                        syncManager.triggerOneTimeSync()
-                        syncManager.triggerImmediateSync()
-                    } catch (e: Exception) {
-                        e.printStackTrace()
+            try {
+                _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null)
+                val result = authRepository.signInWithEmailAndPassword(email, password)
+                result.onSuccess { user ->
+                    _uiState.value = _uiState.value.copy(
+                        isLoading = false,
+                        user = user,
+                        isLoggedIn = true,
+                        errorMessage = null
+                    )
+                    // Trigger sync after successful login
+                    viewModelScope.launch(Dispatchers.IO) {
+                        delay(500) // Small delay to allow UI navigation to complete
+                        try {
+                            syncManager.triggerOneTimeSync()
+                            syncManager.triggerImmediateSync()
+                        } catch (e: Exception) {
+                            e.printStackTrace()
+                        }
                     }
+                }.onFailure { exception ->
+                    _uiState.value = _uiState.value.copy(
+                        isLoading = false,
+                        errorMessage = exception.message ?: "Sign in failed",
+                        isLoggedIn = false
+                    )
                 }
-            }.onFailure { exception ->
+            } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(
                     isLoading = false,
-                    errorMessage = exception.message ?: "Sign in failed",
+                    errorMessage = "Unexpected error: ${e.message}",
                     isLoggedIn = false
                 )
+                e.printStackTrace()
             }
         }
     }
@@ -93,31 +102,40 @@ class AuthViewModel @Inject constructor(
         }
 
         viewModelScope.launch {
-            _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null)
-            val result = authRepository.signUpWithEmailAndPassword(email, password)
-            result.onSuccess { user ->
-                _uiState.value = _uiState.value.copy(
-                    isLoading = false,
-                    user = user,
-                    isLoggedIn = true,
-                    errorMessage = null
-                )
-                // Trigger sync after successful signup
-                viewModelScope.launch(Dispatchers.IO) {
-                    delay(500) // Small delay to allow UI navigation to complete
-                    try {
-                        syncManager.triggerOneTimeSync()
-                        syncManager.triggerImmediateSync()
-                    } catch (e: Exception) {
-                        e.printStackTrace()
+            try {
+                _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null)
+                val result = authRepository.signUpWithEmailAndPassword(email, password)
+                result.onSuccess { user ->
+                    _uiState.value = _uiState.value.copy(
+                        isLoading = false,
+                        user = user,
+                        isLoggedIn = true,
+                        errorMessage = null
+                    )
+                    // Trigger sync after successful signup
+                    viewModelScope.launch(Dispatchers.IO) {
+                        delay(500) // Small delay to allow UI navigation to complete
+                        try {
+                            syncManager.triggerOneTimeSync()
+                            syncManager.triggerImmediateSync()
+                        } catch (e: Exception) {
+                            e.printStackTrace()
+                        }
                     }
+                }.onFailure { exception ->
+                    _uiState.value = _uiState.value.copy(
+                        isLoading = false,
+                        errorMessage = exception.message ?: "Sign up failed",
+                        isLoggedIn = false
+                    )
                 }
-            }.onFailure { exception ->
+            } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(
                     isLoading = false,
-                    errorMessage = exception.message ?: "Sign up failed",
+                    errorMessage = "Unexpected error: ${e.message}",
                     isLoggedIn = false
                 )
+                e.printStackTrace()
             }
         }
     }
