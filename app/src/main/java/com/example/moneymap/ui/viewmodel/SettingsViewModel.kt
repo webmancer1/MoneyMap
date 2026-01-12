@@ -107,11 +107,6 @@ class SettingsViewModel @Inject constructor(
     fun toggleAutoSync(enabled: Boolean) {
         viewModelScope.launch {
             settingsRepository.updateAutoSync(enabled)
-            if (enabled) {
-                syncManager.schedulePeriodicSync()
-            } else {
-                syncManager.cancelPeriodicSync()
-            }
         }
     }
 
