@@ -17,9 +17,13 @@ class MoneyMapApplication : Application(), Configuration.Provider {
     @Inject
     lateinit var notificationChannelManager: NotificationChannelManager
 
+    @Inject
+    lateinit var syncManager: com.example.moneymap.data.sync.SyncManager
+
     override fun onCreate() {
         super.onCreate()
         notificationChannelManager.createNotificationChannels()
+        syncManager.initialize()
         scheduleDailyReminder()
     }
 
