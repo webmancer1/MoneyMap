@@ -19,6 +19,7 @@ data class AuthUiState(
     val user: FirebaseUser? = null,
     val errorMessage: String? = null,
     val isLoggedIn: Boolean = false,
+    val isRegistered: Boolean = false,
     val resetPasswordSuccess: Boolean = false
 )
 
@@ -106,22 +107,16 @@ class AuthViewModel @Inject constructor(
                 _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null)
                 val result = authRepository.signUpWithEmailAndPassword(email, password)
                 result.onSuccess { user ->
+                    // Sign out immediately to prevent auto-login
+                    authRepository.signOut()
+                    
                     _uiState.value = _uiState.value.copy(
                         isLoading = false,
-                        user = user,
-                        isLoggedIn = true,
+                        user = null,
+                        isLoggedIn = false,
+                        isRegistered = true,
                         errorMessage = null
                     )
-                    // Trigger sync after successful signup
-                    viewModelScope.launch(Dispatchers.IO) {
-                        delay(500) // Small delay to allow UI navigation to complete
-                        try {
-                            syncManager.triggerOneTimeSync()
-                            syncManager.triggerImmediateSync()
-                        } catch (e: Exception) {
-                            e.printStackTrace()
-                        }
-                    }
                 }.onFailure { exception ->
                     _uiState.value = _uiState.value.copy(
                         isLoading = false,
