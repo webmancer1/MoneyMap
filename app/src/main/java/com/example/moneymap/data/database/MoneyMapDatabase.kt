@@ -14,7 +14,7 @@ import com.example.moneymap.data.model.*
         Goal::class,
         Debt::class
     ],
-    version = 1,
+    version = 2,
     exportSchema = false
 )
 @TypeConverters(Converters::class)
