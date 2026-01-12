@@ -8,6 +8,7 @@ import java.util.UUID
 data class Category(
     @PrimaryKey
     val id: String = UUID.randomUUID().toString(),
+    val userId: String = "",
     val name: String = "",
     val icon: String = "", // Material Icon name
     val color: String = "", // Hex color string
