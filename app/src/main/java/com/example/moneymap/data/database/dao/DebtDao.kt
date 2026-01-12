@@ -7,14 +7,14 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface DebtDao {
-    @Query("SELECT * FROM debts ORDER BY createdAt DESC")
-    fun getAllDebts(): Flow<List<Debt>>
+    @Query("SELECT * FROM debts WHERE userId = :userId ORDER BY createdAt DESC")
+    fun getAllDebts(userId: String): Flow<List<Debt>>
 
-    @Query("SELECT * FROM debts WHERE id = :id")
-    suspend fun getDebtById(id: String): Debt?
+    @Query("SELECT * FROM debts WHERE id = :id AND userId = :userId")
+    suspend fun getDebtById(userId: String, id: String): Debt?
 
-    @Query("SELECT * FROM debts WHERE type = :type ORDER BY createdAt DESC")
-    fun getDebtsByType(type: DebtType): Flow<List<Debt>>
+    @Query("SELECT * FROM debts WHERE userId = :userId AND type = :type ORDER BY createdAt DESC")
+    fun getDebtsByType(userId: String, type: DebtType): Flow<List<Debt>>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertDebt(debt: Debt)
