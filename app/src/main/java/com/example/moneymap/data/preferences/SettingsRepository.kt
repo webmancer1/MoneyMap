@@ -42,7 +42,7 @@ data class SettingsPreferences(
     val notificationsTips: Boolean = true,
     val biometricLockEnabled: Boolean = false,
     val pin: String? = null,
-    val autoSyncEnabled: Boolean = false
+    val autoSyncEnabled: Boolean = true
 )
 
 @Singleton
@@ -75,7 +75,7 @@ class SettingsRepository @Inject constructor(
                 notificationsTips = preferences[NOTIFICATIONS_TIPS_KEY] ?: true,
                 biometricLockEnabled = preferences[BIOMETRIC_KEY] ?: false,
                 pin = preferences[PIN_KEY],
-                autoSyncEnabled = preferences[AUTO_SYNC_KEY] ?: false
+                autoSyncEnabled = preferences[AUTO_SYNC_KEY] ?: true
             )
         }
 
