@@ -57,9 +57,10 @@ fun RegisterScreen(
         }
     }
 
-    LaunchedEffect(uiState.isLoggedIn) {
-        if (uiState.isLoggedIn) {
-            onRegisterSuccess()
+    LaunchedEffect(uiState.isRegistered) {
+        if (uiState.isRegistered) {
+            android.widget.Toast.makeText(context, "Account created. Please log in.", android.widget.Toast.LENGTH_LONG).show()
+            onNavigateToLogin()
         }
     }
 
