@@ -107,18 +107,6 @@ class AuthViewModel @Inject constructor(
                 _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null)
                 val result = authRepository.signUpWithEmailAndPassword(email, password)
                 result.onSuccess { user ->
-<<<<<<< HEAD
-                    // Sign out immediately to prevent auto-login
-                    authRepository.signOut()
-                    
-                    _uiState.value = _uiState.value.copy(
-                        isLoading = false,
-                        user = null,
-                        isLoggedIn = false,
-                        isRegistered = true,
-                        errorMessage = null
-                    )
-=======
                     // Immediate sign out to enforce manual login
                     authRepository.signOut()
                     _uiState.value = _uiState.value.copy(
@@ -128,7 +116,6 @@ class AuthViewModel @Inject constructor(
                         errorMessage = null
                     )
                     // We don't trigger sync here anymore as we want them to login first
->>>>>>> main2
                 }.onFailure { exception ->
                     _uiState.value = _uiState.value.copy(
                         isLoading = false,
