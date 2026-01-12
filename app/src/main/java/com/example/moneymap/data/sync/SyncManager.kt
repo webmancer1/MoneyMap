@@ -13,9 +13,22 @@ import javax.inject.Singleton
 class SyncManager @Inject constructor(
     private val workManager: WorkManager,
     private val syncService: FirestoreSyncService,
+    private val settingsRepository: com.example.moneymap.data.preferences.SettingsRepository,
     @ApplicationScope private val applicationScope: CoroutineScope
 ) {
-    fun schedulePeriodicSync() {
+    fun initialize() {
+        applicationScope.launch {
+            settingsRepository.settingsFlow.collect { preferences ->
+                if (preferences.autoSyncEnabled) {
+                    schedulePeriodicSync()
+                } else {
+                    cancelPeriodicSync()
+                }
+            }
+        }
+    }
+
+    private fun schedulePeriodicSync() {
         val constraints = Constraints.Builder()
             .setRequiredNetworkType(NetworkType.CONNECTED)
             .build()
@@ -36,7 +49,7 @@ class SyncManager @Inject constructor(
         return syncService.syncAll()
     }
 
-    fun cancelPeriodicSync() {
+    private fun cancelPeriodicSync() {
         workManager.cancelUniqueWork("periodic_sync")
     }
 
