@@ -50,16 +50,9 @@ class HomeViewModel @Inject constructor(
         initializeCategories()
         loadUserProfile()
         observeMonthlySummary()
-        schedulePeriodicSync()
         // Warm up FX rates in the background so summaries can use real-time values.
         viewModelScope.launch {
             currencyRepository.refreshRatesIfStale()
-        }
-    }
-
-    private fun schedulePeriodicSync() {
-        viewModelScope.launch {
-            syncManager.schedulePeriodicSync()
         }
     }
 
