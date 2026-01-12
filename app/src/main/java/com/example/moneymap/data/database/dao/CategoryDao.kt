@@ -7,14 +7,14 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface CategoryDao {
-    @Query("SELECT * FROM categories WHERE isActive = 1 ORDER BY isDefault DESC, name ASC")
-    fun getAllCategories(): Flow<List<Category>>
+    @Query("SELECT * FROM categories WHERE userId = :userId AND isActive = 1 ORDER BY isDefault DESC, name ASC")
+    fun getAllCategories(userId: String): Flow<List<Category>>
 
-    @Query("SELECT * FROM categories WHERE id = :id")
-    suspend fun getCategoryById(id: String): Category?
+    @Query("SELECT * FROM categories WHERE id = :id AND userId = :userId")
+    suspend fun getCategoryById(userId: String, id: String): Category?
 
-    @Query("SELECT * FROM categories WHERE type = :type AND isActive = 1 ORDER BY isDefault DESC, name ASC")
-    fun getCategoriesByType(type: CategoryType): Flow<List<Category>>
+    @Query("SELECT * FROM categories WHERE userId = :userId AND type = :type AND isActive = 1 ORDER BY isDefault DESC, name ASC")
+    fun getCategoriesByType(userId: String, type: CategoryType): Flow<List<Category>>
 
     @Query("SELECT * FROM categories WHERE isDefault = 1")
     suspend fun getDefaultCategories(): List<Category>
@@ -31,7 +31,7 @@ interface CategoryDao {
     @Delete
     suspend fun deleteCategory(category: Category)
 
-    @Query("UPDATE categories SET isActive = 0 WHERE id = :id")
-    suspend fun deactivateCategory(id: String)
+    @Query("UPDATE categories SET isActive = 0 WHERE id = :id AND userId = :userId")
+    suspend fun deactivateCategory(userId: String, id: String)
 }
 
