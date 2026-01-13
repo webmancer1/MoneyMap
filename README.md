@@ -30,7 +30,6 @@ A comprehensive personal finance management mobile application built with Kotlin
 - **Architecture:** MVVM (Model-View-ViewModel)
 - **Dependency Injection:** Hilt
 - **Navigation:** Jetpack Compose Navigation
-- **Charts:** Vico (planned)
 
 ## Setup Instructions
 
