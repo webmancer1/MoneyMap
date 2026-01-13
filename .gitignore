@@ -15,3 +15,10 @@
 local.properties
 google-services.json
 app/release/
+build_error.log
+build_log.txt
+build_log_2.txt
+build_output.log
+build_output_2.log
+jvm_inner_list.txt
+jvm_list.txt
