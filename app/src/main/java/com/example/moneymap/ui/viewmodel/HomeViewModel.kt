@@ -7,6 +7,7 @@ import com.example.moneymap.data.preferences.SettingsRepository
 import com.example.moneymap.data.repository.AuthRepository
 import com.example.moneymap.data.repository.CategoryRepository
 import com.example.moneymap.data.repository.CurrencyRepository
+import com.example.moneymap.data.repository.NotificationRepository
 import com.example.moneymap.data.repository.TransactionRepository
 import com.example.moneymap.data.sync.SyncManager
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -23,7 +24,8 @@ data class HomeUiState(
     val currencyCode: String = "KES",
     val isLoading: Boolean = false,
     val userName: String = "",
-    val greeting: String = ""
+    val greeting: String = "",
+    val unreadNotificationCount: Int = 0
 )
 
 @HiltViewModel
@@ -33,7 +35,8 @@ class HomeViewModel @Inject constructor(
     private val categoryRepository: CategoryRepository,
     private val syncManager: SyncManager,
     private val settingsRepository: SettingsRepository,
-    private val currencyRepository: CurrencyRepository
+    private val currencyRepository: CurrencyRepository,
+    private val notificationRepository: NotificationRepository // Added
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(HomeUiState())
@@ -50,10 +53,19 @@ class HomeViewModel @Inject constructor(
         initializeCategories()
         loadUserProfile()
         observeMonthlySummary()
+        observeUnreadNotifications() // Added
         // Warm up FX rates in the background so summaries can use real-time values.
         viewModelScope.launch {
             currencyRepository.refreshRatesIfStale()
         }
+    }
+
+    private fun observeUnreadNotifications() {
+        notificationRepository.unreadCount
+            .onEach { count ->
+                _uiState.update { it.copy(unreadNotificationCount = count) }
+            }
+            .launchIn(viewModelScope)
     }
 
     private fun initializeCategories() {
