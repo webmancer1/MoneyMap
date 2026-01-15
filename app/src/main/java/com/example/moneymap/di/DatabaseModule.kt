@@ -2,6 +2,7 @@ package com.example.moneymap.di
 
 import android.content.Context
 import androidx.room.Room
+import com.example.moneymap.data.dao.NotificationDao
 import com.example.moneymap.data.database.MoneyMapDatabase
 import com.example.moneymap.data.database.dao.*
 import dagger.Module
@@ -41,13 +42,18 @@ object DatabaseModule {
     }
 
     @Provides
+    fun provideDebtDao(database: MoneyMapDatabase): DebtDao {
+        return database.debtDao()
+    }
+
+    @Provides
     fun provideGoalDao(database: MoneyMapDatabase): GoalDao {
         return database.goalDao()
     }
 
     @Provides
-    fun provideDebtDao(database: MoneyMapDatabase): DebtDao {
-        return database.debtDao()
+    fun provideNotificationDao(database: MoneyMapDatabase): NotificationDao {
+        return database.notificationDao()
     }
 }
 
