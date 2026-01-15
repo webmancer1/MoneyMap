@@ -25,8 +25,9 @@ object NotificationModule {
     @Provides
     @Singleton
     fun provideLocalNotificationService(
-        @ApplicationContext context: Context
+        @ApplicationContext context: Context,
+        notificationRepository: com.example.moneymap.data.repository.NotificationRepository
     ): LocalNotificationService {
-        return LocalNotificationService(context)
+        return LocalNotificationService(context, notificationRepository)
     }
 }
