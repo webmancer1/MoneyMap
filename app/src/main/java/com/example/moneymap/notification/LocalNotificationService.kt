@@ -10,20 +10,39 @@ import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import com.example.moneymap.MainActivity
 import com.example.moneymap.R
+import com.example.moneymap.data.repository.NotificationRepository
+import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
 class LocalNotificationService @Inject constructor(
-    private val context: Context
+    @ApplicationContext private val context: Context,
+    private val notificationRepository: NotificationRepository
 ) {
+
+    private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
     private fun showNotification(
         channelId: String,
         title: String,
         message: String,
-        notificationId: Int
+        notificationId: Int,
+        type: String
     ) {
+        // Persist notification
+        serviceScope.launch {
+            try {
+                notificationRepository.insertNotification(title, message, type)
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+
         if (ActivityCompat.checkSelfPermission(
                 context,
                 Manifest.permission.POST_NOTIFICATIONS
@@ -61,7 +80,8 @@ class LocalNotificationService @Inject constructor(
             NotificationChannelManager.CHANNEL_TRANSACTIONS,
             title,
             message,
-            System.currentTimeMillis().toInt()
+            System.currentTimeMillis().toInt(),
+            "transaction"
         )
     }
 
@@ -70,7 +90,8 @@ class LocalNotificationService @Inject constructor(
             NotificationChannelManager.CHANNEL_BUDGET,
             title,
             message,
-            System.currentTimeMillis().toInt()
+            System.currentTimeMillis().toInt(),
+            "budget"
         )
     }
 
@@ -79,7 +100,8 @@ class LocalNotificationService @Inject constructor(
             NotificationChannelManager.CHANNEL_SECURITY,
             title,
             message,
-            System.currentTimeMillis().toInt()
+            System.currentTimeMillis().toInt(),
+            "security"
         )
     }
 
@@ -88,7 +110,8 @@ class LocalNotificationService @Inject constructor(
             NotificationChannelManager.CHANNEL_GENERAL,
             title,
             message,
-            System.currentTimeMillis().toInt()
+            System.currentTimeMillis().toInt(),
+            "general"
         )
     }
 }
