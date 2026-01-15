@@ -34,6 +34,7 @@ fun HomeScreen(
     onNavigateToBudgets: () -> Unit,
     onNavigateToDebts: () -> Unit,
     onNavigateToSavings: () -> Unit,
+    onNavigateToNotifications: () -> Unit,
     onNavigateToSettings: () -> Unit,
     viewModel: HomeViewModel = hiltViewModel(),
     isDarkTheme: Boolean = isSystemInDarkTheme(),
@@ -61,6 +62,20 @@ fun HomeScreen(
                     }
                 },
                 actions = {
+                    IconButton(onClick = onNavigateToNotifications) {
+                        BadgedBox(
+                            badge = {
+                                if (uiState.unreadNotificationCount > 0) {
+                                    Badge { Text(uiState.unreadNotificationCount.toString()) }
+                                }
+                            }
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Notifications,
+                                contentDescription = "Notifications"
+                            )
+                        }
+                    }
                     IconButton(onClick = { onToggleTheme(!isDarkTheme) }) {
                         Icon(
                             imageVector = if (isDarkTheme) Icons.Default.WbSunny else Icons.Default.NightlightRound,
