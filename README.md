@@ -31,28 +31,6 @@ A comprehensive personal finance management mobile application built with Kotlin
 - **Dependency Injection:** Hilt
 - **Navigation:** Jetpack Compose Navigation
 
-## Setup Instructions
-
-### Prerequisites
-- Android Studio Hedgehog (2023.1.1) or later
-- JDK 11 or higher
-- Android SDK with API 24 (Android 7.0) minimum
-- Firebase project (for authentication and cloud sync)
-
-### Firebase Setup
-
-1. Create a Firebase project at [Firebase Console](https://console.firebase.google.com/)
-2. Add an Android app to your Firebase project:
-   - Package name: `com.example.moneymap`
-   - Download `google-services.json`
-   - Place it in `app/` directory
-3. Enable Authentication:
-   - Go to Authentication > Sign-in method
-   - Enable Email/Password authentication
-4. Enable Firestore (for future sync):
-   - Go to Firestore Database
-   - Create database in test mode (for development)
-   - Update security rules as needed
 
 ### Building the Project
 
@@ -70,23 +48,7 @@ cd MoneyMap
 
 5. Build and run the app
 
-## Project Structure
 
-```
-app/src/main/java/com/example/moneymap/
-├── data/
-│   ├── database/          # Room database, DAOs, converters
-│   ├── model/             # Data models (Transaction, Category, etc.)
-│   ├── repository/        # Repository implementations
-│   └── util/              # Utility classes (DefaultCategories)
-├── di/                    # Hilt dependency injection modules
-├── navigation/            # Navigation setup and routes
-├── ui/
-│   ├── screen/            # UI screens (auth, home, transactions, etc.)
-│   ├── theme/             # Material 3 theme configuration
-│   └── viewmodel/         # ViewModels for each screen
-└── MainActivity.kt        # Main activity
-```
 
 ## Architecture
 
@@ -97,14 +59,6 @@ The app follows MVVM (Model-View-ViewModel) architecture:
 - **ViewModel:** Business logic and state management
 - **Repository:** Data access layer (Room + Firebase)
 
-## Database Schema
-
-### Tables
-- `transactions` - Stores income and expense transactions
-- `categories` - Stores transaction categories
-- `budgets` - Stores budget information
-- `goals` - Stores savings goals
-- `debts` - Stores debt information
 
 ## Default Categories
 
@@ -115,10 +69,7 @@ The app follows MVVM (Model-View-ViewModel) architecture:
 - Bills & Utilities
 - Entertainment
 - Healthcare
-- Education
-- Personal Care
-- Travel
-- Other
+- Others
 
 
 
