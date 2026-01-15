@@ -167,6 +167,9 @@ fun MoneyMapNavigation(
                     onNavigateToSavings = {
                         navController.navigate(NavRoutes.SAVINGS)
                     },
+                    onNavigateToNotifications = {
+                        navController.navigate(NavRoutes.NOTIFICATIONS)
+                    },
                     onNavigateToSettings = {
                         navController.navigate(NavRoutes.SETTINGS)
                     },
@@ -297,6 +300,11 @@ fun MoneyMapNavigation(
             }
             composable(NavRoutes.MANAGE_CATEGORIES) {
                 com.example.moneymap.ui.screen.settings.ManageCategoriesScreen(
+                    onNavigateBack = { navController.popBackStack() }
+                )
+            }
+            composable(NavRoutes.NOTIFICATIONS) {
+                com.example.moneymap.ui.screen.notification.NotificationScreen(
                     onNavigateBack = { navController.popBackStack() }
                 )
             }
