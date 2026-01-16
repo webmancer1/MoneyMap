@@ -65,15 +65,14 @@ class AuthViewModel @Inject constructor(
                         errorMessage = null
                     )
                     // Trigger sync after successful login
-                    viewModelScope.launch(Dispatchers.IO) {
-                        delay(500) // Small delay to allow UI navigation to complete
-                        try {
-                            syncManager.triggerOneTimeSync()
-                            syncManager.triggerImmediateSync()
-                        } catch (e: Exception) {
-                            e.printStackTrace()
-                        }
+                    // Trigger sync immediately after successful login
+                    try {
+                        syncManager.triggerOneTimeSync()
+                        syncManager.triggerImmediateSync()
+                    } catch (e: Exception) {
+                        e.printStackTrace()
                     }
+
                 }.onFailure { exception ->
                     _uiState.value = _uiState.value.copy(
                         isLoading = false,
@@ -184,15 +183,14 @@ class AuthViewModel @Inject constructor(
                     errorMessage = null
                 )
                 // Trigger sync after successful login
-                viewModelScope.launch(Dispatchers.IO) {
-                    delay(500) // Small delay to allow UI navigation to complete
-                    try {
-                        syncManager.triggerOneTimeSync()
-                        syncManager.triggerImmediateSync()
-                    } catch (e: Exception) {
-                        e.printStackTrace()
-                    }
+                // Trigger sync immediately after successful login
+                try {
+                    syncManager.triggerOneTimeSync()
+                    syncManager.triggerImmediateSync()
+                } catch (e: Exception) {
+                    e.printStackTrace()
                 }
+
             }.onFailure { exception ->
                 _uiState.value = _uiState.value.copy(
                     isLoading = false,
