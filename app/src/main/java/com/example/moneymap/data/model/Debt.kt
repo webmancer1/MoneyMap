@@ -4,6 +4,9 @@ import androidx.room.Entity
 import androidx.room.PrimaryKey
 import java.util.UUID
 
+import androidx.annotation.Keep
+
+@Keep
 @Entity(tableName = "debts")
 data class Debt(
     @PrimaryKey
